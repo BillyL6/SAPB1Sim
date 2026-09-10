@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAP Business One - Enterprise ERP Simulator</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navigation Bar (SAP Fiori Shell) -->
+  <header class="sap-shell-header">
+    <div class="shell-left">
+      <button class="menu-toggle-btn" id="menuToggle" title="Toggle Navigation Menu">☰</button>
+      <div class="sap-logo-badge">
+        <span class="sap-badge">SAP B1</span>
+        <span>Enterprise Cloud Simulator</span>
+      </div>
+    </div>
+
+    <div class="shell-center">
+      <div class="search-bar-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="globalSearch" placeholder="Search Master Data, Orders, Invoices, Items...">
+      </div>
+    </div>
+
+    <div class="shell-right">
+      <div class="db-pill">
+        <span class="status-dot"></span>
+        <span>82 Tables Connected</span>
+      </div>
+      <div class="user-avatar" title="System Administrator">SA</div>
+    </div>
+  </header>
+
+  <!-- Main App Layout (Sidebar + Content Workspace) -->
+  <div class="app-container">
+    
+    <!-- Left Navigation Sidebar -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-section-title">Navigation</div>
+      <ul class="sidebar-nav-list">
+        <li class="nav-item active" data-view="cockpit">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Executive Cockpit</span>
+        </li>
+        <li class="nav-item" data-view="documents">
+          <span class="nav-icon">📑</span>
+          <span class="nav-text">Document Explorer</span>
+        </li>
+        <li class="nav-item" data-view="relmap">
+          <span class="nav-icon">🕸️</span>
+          <span class="nav-text">Relationship Map</span>
+        </li>
+        <li class="nav-item" data-view="bp">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Business Partners</span>
+        </li>
+        <li class="nav-item" data-view="inventory">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Inventory & Batches</span>
+        </li>
+        <li class="nav-item" data-view="production">
+          <span class="nav-icon">🏭</span>
+          <span class="nav-text">Production & BOM</span>
+        </li>
+        <li class="nav-item" data-view="financials">
+          <span class="nav-icon">💰</span>
+          <span class="nav-text">Financials & COA</span>
+        </li>
+        <li class="nav-item" data-view="crm">
+          <span class="nav-icon">🎯</span>
+          <span class="nav-text">CRM Opportunities</span>
+        </li>
+        <li class="nav-item" data-view="sqlstudio">
+          <span class="nav-icon">🛠️</span>
+          <span class="nav-text">SQL Studio</span>
+        </li>
+        <li class="nav-item" data-view="alltables">
+          <span class="nav-icon">🗄️</span>
+          <span class="nav-text">All 82 Tables</span>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Content Workspace -->
+    <main class="app-content">
+
+      <!-- 1. EXECUTIVE COCKPIT VIEW -->
+      <section class="view-panel active" id="view-cockpit">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>SAP Fiori Executive Cockpit</h2>
+            <p>Real-time enterprise KPIs across Sales, Purchasing, Inventory, and Manufacturing</p>
+          </div>
+          <div class="view-actions">
+            <button class="sap-btn" id="btnRefreshCockpit">🔄 Refresh Cockpit</button>
+            <button class="sap-btn sap-btn-primary" onclick="switchView('sqlstudio')">⚡ Run Custom Query</button>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-tile">
+            <span class="kpi-title">Total Revenue (OINV)</span>
+            <span class="kpi-val" id="kpiRevenue">$0.00</span>
+            <span class="kpi-sub">AR Invoices Settled</span>
+          </div>
+          <div class="kpi-tile tile-success">
+            <span class="kpi-title">Stock Valuation (OITW)</span>
+            <span class="kpi-val" id="kpiStockVal">$0.00</span>
+            <span class="kpi-sub">Weighted Moving Average</span>
+          </div>
+          <div class="kpi-tile tile-warning">
+            <span class="kpi-title">AR Receivables (OCRD)</span>
+            <span class="kpi-val" id="kpiReceivables">$0.00</span>
+            <span class="kpi-sub">Customer Outstandings</span>
+          </div>
+          <div class="kpi-tile tile-danger">
+            <span class="kpi-title">AP Payables (OCRD)</span>
+            <span class="kpi-val" id="kpiPayables">$0.00</span>
+            <span class="kpi-sub">Supplier Obligations</span>
+          </div>
+          <div class="kpi-tile tile-gold">
+            <span class="kpi-title">Open Sales Orders (ORDR)</span>
+            <span class="kpi-val" id="kpiOpenSO">0 Orders</span>
+            <span class="kpi-sub" id="kpiOpenSOTotal">$0.00 in Backlog</span>
+          </div>
+          <div class="kpi-tile">
+            <span class="kpi-title">CRM Win Rate (OOPR)</span>
+            <span class="kpi-val" id="kpiWinRate">0%</span>
+            <span class="kpi-sub" id="kpiOppTotal">$0.00 Pipeline Value</span>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+          
+          <!-- Recent Sales Orders Card -->
+          <div class="sap-card">
+            <div class="sap-card-header">
+              <span class="sap-card-title">📦 Recent Sales Orders (ORDR)</span>
+              <button class="sap-btn sap-btn-sm" onclick="openTableBrowser('ORDR')">View All (ORDR)</button>
+            </div>
+            <div class="sap-card-body">
+              <div class="sap-table-wrap">
+                <table class="sap-table">
+                  <thead>
+                    <tr>
+                      <th>Doc #</th>
+                      <th>Date</th>
+                      <th>Customer</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cockpitRecentSOBody">
+                    <tr><td colspan="6" style="text-align:center;">Loading orders...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inventory Alerts & Top Customers Card -->
+          <div class="sap-card">
+            <div class="sap-card-header">
+              <span class="sap-card-title">⚠️ Reorder Threshold Alerts</span>
+              <button class="sap-btn sap-btn-sm" onclick="switchView('inventory')">Inventory Matrix</button>
+            </div>
+            <div class="sap-card-body">
+              <div class="sap-table-wrap">
+                <table class="sap-table">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Whs</th>
+                      <th>Stock</th>
+                      <th>Min</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cockpitStockAlertsBody">
+                    <tr><td colspan="4" style="text-align:center;">Loading alerts...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 2. DOCUMENT FORM & EXPLORER VIEW -->
+      <section class="view-panel" id="view-documents">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>SAP Standard Document Explorer</h2>
+            <p>Form & line item viewer with SAP Golden Arrow ➡️ drill-downs</p>
+          </div>
+          <div class="view-actions">
+            <select class="sap-select" id="docTypeSelect">
+              <option value="ORDR">Sales Orders (ORDR)</option>
+              <option value="OINV">AR Invoices (OINV)</option>
+              <option value="ODLN">Deliveries (ODLN)</option>
+              <option value="OQUT">Sales Quotes (OQUT)</option>
+              <option value="OPOR">Purchase Orders (OPOR)</option>
+              <option value="OPDN">Goods Receipt PO (OPDN)</option>
+              <option value="OPCH">AP Invoices (OPCH)</option>
+              <option value="OPRQ">Purchase Requests (OPRQ)</option>
+              <option value="ORCT">Incoming Payments (ORCT)</option>
+              <option value="OVPM">Outgoing Payments (OVPM)</option>
+              <option value="OWOR">Production Orders (OWOR)</option>
+              <option value="OIPF">Landed Costs (OIPF)</option>
+            </select>
+            <button class="sap-btn sap-btn-primary" id="btnLoadDocList">Load Documents</button>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-header">
+            <span class="sap-card-title" id="docListCardTitle">Documents List</span>
+            <div class="search-bar-wrap" style="width:250px;">
+              <input type="text" id="docSearchInput" placeholder="Filter current list...">
+            </div>
+          </div>
+          <div class="sap-card-body">
+            <div class="sap-table-wrap">
+              <table class="sap-table" id="docListTable">
+                <thead id="docListThead"></thead>
+                <tbody id="docListTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. RELATIONSHIP MAP VIEW -->
+      <section class="view-panel" id="view-relmap">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>Interactive Document Relationship Map</h2>
+            <p>Visual document lifecycle tracing from Quotation to Settlement</p>
+          </div>
+          <div class="view-actions">
+            <input type="text" class="sap-input" id="relMapDocEntry" placeholder="Enter DocEntry (e.g. 1)" value="1" style="width:180px;">
+            <select class="sap-select" id="relMapTypeSelect">
+              <option value="ORDR">Sales Order (ORDR)</option>
+              <option value="OINV">AR Invoice (OINV)</option>
+              <option value="OPOR">Purchase Order (OPOR)</option>
+              <option value="OPCH">AP Invoice (OPCH)</option>
+            </select>
+            <button class="sap-btn sap-btn-primary" id="btnGenerateRelMap">Generate Flow</button>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-header">
+            <span class="sap-card-title" id="relMapCardTitle">Document Progression Chain</span>
+          </div>
+          <div class="sap-card-body">
+            <div class="rel-map-container" id="relMapContainer">
+              <!-- Rendered Nodes & Links -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. BUSINESS PARTNERS & CRM 360 -->
+      <section class="view-panel" id="view-bp">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>Business Partner Master (OCRD)</h2>
+            <p>Customer & Supplier master records with address books and contacts</p>
+          </div>
+          <div class="view-actions">
+            <select class="sap-select" id="bpTypeFilter">
+              <option value="ALL">All Partners (Customers & Vendors)</option>
+              <option value="C">Customers Only (C)</option>
+              <option value="S">Suppliers / Vendors (S)</option>
+            </select>
+            <button class="sap-btn" id="btnRefreshBP">Refresh</button>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-body">
+            <div class="sap-table-wrap">
+              <table class="sap-table">
+                <thead>
+                  <tr>
+                    <th>Card Code</th>
+                    <th>Partner Name</th>
+                    <th>Type</th>
+                    <th>Group</th>
+                    <th>Phone</th>
+                    <th>Current Balance</th>
+                    <th>G/L Account</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="bpTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. INVENTORY, BATCHES & BINS -->
+      <section class="view-panel" id="view-inventory">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>Inventory & Batch Tracking</h2>
+            <p>Multi-Warehouse stock availability matrix and batch expiration monitoring</p>
+          </div>
+          <div class="view-actions">
+            <button class="sap-btn active" id="btnShowStockMatrix">Warehouse Matrix (OITW)</button>
+            <button class="sap-btn" id="btnShowBatches">Batch Numbers (OBTN)</button>
+            <button class="sap-btn" id="btnShowBins">Bin Locations (OBIN)</button>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-header">
+            <span class="sap-card-title" id="inventoryCardTitle">Multi-Warehouse Inventory (OITW)</span>
+          </div>
+          <div class="sap-card-body">
+            <div class="sap-table-wrap">
+              <table class="sap-table" id="inventoryTable">
+                <thead id="inventoryThead"></thead>
+                <tbody id="inventoryTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. PRODUCTION & BOM VIEW -->
+      <section class="view-panel" id="view-production">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>Production & Bill of Materials (BOM)</h2>
+            <p>Product tree components, work orders (OWOR), and component issue tracking</p>
+          </div>
+          <div class="view-actions">
+            <button class="sap-btn active" id="btnShowBOMTrees">BOM Product Trees (OITT)</button>
+            <button class="sap-btn" id="btnShowWorkOrders">Work Orders (OWOR)</button>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-header">
+            <span class="sap-card-title" id="prodCardTitle">Bill of Materials Master (OITT)</span>
+          </div>
+          <div class="sap-card-body">
+            <div class="sap-table-wrap">
+              <table class="sap-table" id="prodTable">
+                <thead id="prodThead"></thead>
+                <tbody id="prodTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. FINANCIALS & CHART OF ACCOUNTS -->
+      <section class="view-panel" id="view-financials">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>Financials & Chart of Accounts (OACT)</h2>
+            <p>General Ledger hierarchy, balanced journal entries (OJDT), and cost centers</p>
+          </div>
+          <div class="view-actions">
+            <button class="sap-btn active" id="btnShowCOA">Chart of Accounts (OACT)</button>
+            <button class="sap-btn" id="btnShowJournalEntries">Journal Entries (OJDT)</button>
+            <button class="sap-btn" id="btnShowCostCenters">Cost Centers (OPRC)</button>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-header">
+            <span class="sap-card-title" id="finCardTitle">Chart of Accounts (OACT)</span>
+          </div>
+          <div class="sap-card-body">
+            <div class="sap-table-wrap">
+              <table class="sap-table" id="finTable">
+                <thead id="finThead"></thead>
+                <tbody id="finTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. CRM OPPORTUNITIES -->
+      <section class="view-panel" id="view-crm">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>CRM Sales Opportunities (OOPR)</h2>
+            <p>Deal pipeline, stage progression, win probabilities, and sales activities (OCLG)</p>
+          </div>
+          <div class="view-actions">
+            <button class="sap-btn" id="btnRefreshCRM">Refresh CRM Pipeline</button>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-body">
+            <div class="sap-table-wrap">
+              <table class="sap-table">
+                <thead>
+                  <tr>
+                    <th>Opp ID</th>
+                    <th>Opportunity Name</th>
+                    <th>Customer</th>
+                    <th>Potential Revenue</th>
+                    <th>Win %</th>
+                    <th>Status</th>
+                    <th>Open Date</th>
+                    <th>Close Date</th>
+                  </tr>
+                </thead>
+                <tbody id="crmTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. SQL STUDIO VIEW -->
+      <section class="view-panel" id="view-sqlstudio">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>Interactive SQL Query Studio</h2>
+            <p>Direct SQL console connected to all 82 SAP Business One database tables</p>
+          </div>
+          <div class="view-actions">
+            <button class="sap-btn sap-btn-primary" id="btnExecuteSQL">▶ Execute SQL (Ctrl+Enter)</button>
+          </div>
+        </div>
+
+        <div class="sql-studio-layout">
+          <!-- Preset Queries Sidebar -->
+          <div class="sap-card">
+            <div class="sap-card-header">
+              <span class="sap-card-title">📚 Preset Showcase Queries</span>
+            </div>
+            <div class="sap-card-body" style="padding:10px;">
+              <div class="sql-presets-list" id="sqlPresetsList"></div>
+            </div>
+          </div>
+
+          <!-- Query Editor & Results -->
+          <div class="sql-editor-wrap">
+            <textarea class="sql-textarea" id="sqlQueryText" placeholder="Write any SQL query (e.g. SELECT * FROM OCRD LIMIT 10;)">SELECT 
+    T0.ItemCode,
+    T1.ItemName,
+    T0.WhsCode,
+    T2.WhsName,
+    T0.OnHand AS Stock,
+    T0.IsCommited AS Committed,
+    T0.OnOrder AS On_PO,
+    (T0.OnHand - T0.IsCommited + T0.OnOrder) AS AvailableStock
+FROM OITW T0
+INNER JOIN OITM T1 ON T0.ItemCode = T1.ItemCode
+INNER JOIN OWHS T2 ON T0.WhsCode = T2.WhsCode
+ORDER BY T0.ItemCode, T0.WhsCode
+LIMIT 10;</textarea>
+
+            <div class="sap-card">
+              <div class="sap-card-header">
+                <span class="sap-card-title" id="sqlResultStatus">Query Results</span>
+                <span id="sqlExecutionTime" style="font-size:12px; color:var(--text-muted);">0 ms</span>
+              </div>
+              <div class="sap-card-body">
+                <div class="sap-table-wrap" style="max-height:400px; overflow-y:auto;">
+                  <table class="sap-table" id="sqlResultTable">
+                    <thead id="sqlResultThead"></thead>
+                    <tbody id="sqlResultTbody">
+                      <tr><td style="text-align:center; color:var(--text-muted);">Click "Execute SQL" to view results</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. ALL 82 TABLES BROWSER -->
+      <section class="view-panel" id="view-alltables">
+        <div class="view-header">
+          <div class="view-title-wrap">
+            <h2>SAP B1 Data Dictionary (82 Tables)</h2>
+            <p>Browse schema, table definitions, and records for every standard table</p>
+          </div>
+          <div class="view-actions">
+            <div class="search-bar-wrap" style="width:250px;">
+              <input type="text" id="tablesFilterInput" placeholder="Filter tables...">
+            </div>
+          </div>
+        </div>
+
+        <div class="sap-card">
+          <div class="sap-card-body">
+            <div class="sap-table-wrap">
+              <table class="sap-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Table Name</th>
+                    <th>Module / Category</th>
+                    <th>Record Count</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="allTablesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- SAP Golden Arrow Inspector Modal (Drill-down popup) -->
+  <div class="sap-modal-backdrop" id="inspectorModal">
+    <div class="sap-modal-card">
+      <div class="sap-modal-header">
+        <span class="sap-modal-title" id="modalTitle">Inspector Card</span>
+        <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+      </div>
+      <div class="sap-modal-body" id="modalBody">
+        <!-- Dynamic content: BP 360, Item 360, Document Form -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Script -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
