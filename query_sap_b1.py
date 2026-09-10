@@ -315,16 +315,16 @@ def run_showcase(db_name="new_b1.db"):
         WHERE T0.ItemCode LIKE 'ITM-IC-%'
         ORDER BY T0.ItemCode, 
             CASE T0.WhsCode 
-                WHEN 'ICCNGB' THEN 1 
+                WHEN 'ICCChina' THEN 1 
                 WHEN 'ICCSIT' THEN 2 
                 WHEN 'NZNTH'  THEN 3 
                 WHEN 'NZSTH'  THEN 4 
                 WHEN 'NZSIT'  THEN 5 
-                WHEN 'UKWYF'  THEN 6 
-                WHEN 'UKSIT'  THEN 7 
-                WHEN 'FDMSYD' THEN 1
-                WHEN 'BDLMEL' THEN 2
-                WHEN 'MFTBNE' THEN 3
+                WHEN 'EuropeMarketPlace'  THEN 6 
+                WHEN 'EuropeSIT'  THEN 7 
+                WHEN 'AU Warehouse' THEN 1
+                WHEN 'AU Warehouse' THEN 2
+                WHEN 'AU Warehouse' THEN 3
                 WHEN 'VGLPER' THEN 4
                 ELSE 8 
             END

@@ -13,10 +13,10 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
     print(f" Creating comprehensive 82-table SAP Business One schema for '{db_name}'...")
     if stock_by_whs:
         print(" ⚙️ SYSTEM CONFIGURATION: 'Manage Stock by Warehouse' = 'Y' (Multi-Warehouse Costing)")
-        print(" 🏢 ACTIVE WAREHOUSES: ICCNGB, ICCSIT, NZNTH, NZSTH, NZSIT, UKWYF, UKSIT")
+        print(" 🏢 ACTIVE WAREHOUSES: ICCChina, ICCSIT, NZNTH, NZSTH, NZSIT, EuropeMarketPlace, EuropeSIT")
     else:
         print(" ⚙️ SYSTEM CONFIGURATION: 'Manage Stock by Warehouse' = 'N' (Company-Level Valuation Only)")
-        print(" 🏢 ACTIVE WAREHOUSES: FDMSYD, BDLMEL, MFTBNE, VGLPER")
+        print(" 🏢 ACTIVE WAREHOUSES: AU Warehouse, AU Warehouse, AU Warehouse, VGLPER")
         print(" ⚙️ OITW.AvgPrice is DISABLED (0.0). All inventory cost is accumulated at OITM.AvgPrice.")
 
     all_tables = [
@@ -1203,41 +1203,41 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
     # -------------------------------------------------------------
     if stock_by_whs:
         # new_b1.db (Multi-Warehouse Costing):
-        # ICCNGB, ICCSIT, NZNTH, NZSTH, NZSIT, UKWYF, UKSIT
+        # ICCChina, ICCSIT, NZNTH, NZSTH, NZSIT, EuropeMarketPlace, EuropeSIT
         primary_whs = "NZNTH"
-        whs_origin = "ICCNGB"
+        whs_origin = "ICCChina"
         whs_transit = "ICCSIT"
         whs_dest = "NZNTH"
         whs_reg1 = "NZSTH"
-        whs_reg2 = "UKWYF"
+        whs_reg2 = "EuropeMarketPlace"
         whs_reg3 = "NZSIT"
-        whs_reg4 = "UKSIT"
+        whs_reg4 = "EuropeSIT"
 
         owhs_data = [
-            ("ICCNGB", "Intercompany Consolidation Center (Ningbo Port Origin)", "Port Zone 1", "88 Industrial Port Rd", "Ningbo", "ZJ", "315800"),
+            ("ICCChina", "Intercompany Consolidation Center (Ningbo Port Origin)", "Port Zone 1", "88 Industrial Port Rd", "Ningbo", "ZJ", "315800"),
             ("ICCSIT", "Intercompany Sea In-Transit (Ningbo Ocean Carrier Hub)", "Vessel Pacific Mariner", "Berth 7 Ocean Port", "Singapore", "SG", "018989"),
             ("NZNTH", "New Zealand North Island DC (Auckland Main Hub)", "Auckland Logistics Park", "45 Landing Drive", "Mangere", "Auckland", "2022"),
             ("NZSTH", "New Zealand South Island DC (Christchurch Hub)", "Christchurch Airport Hub", "12 Logistics Dr", "Harewood", "Christchurch", "8042"),
             ("NZSIT", "New Zealand Coastal In-Transit (Sea Hub)", "Cook Strait Maritime Carrier", "Port of Tauranga", "Tauranga", "BOP", "3110"),
-            ("UKWYF", "UK West Yorkshire Facility (Wakefield Hub)", "Wakefield Europort", "Express Way", "Normanton", "West Yorkshire", "WF6 2TZ"),
-            ("UKSIT", "UK Maritime In-Transit (Felixstowe Sea Hub)", "North Sea Carrier Vessel", "Port of Felixstowe", "Suffolk", "UK", "IP11 3SY"),
+            ("EuropeMarketPlace", "UK West Yorkshire Facility (Wakefield Hub)", "Wakefield Europort", "Express Way", "Normanton", "West Yorkshire", "WF6 2TZ"),
+            ("EuropeSIT", "UK Maritime In-Transit (Felixstowe Sea Hub)", "North Sea Carrier Vessel", "Port of Felixstowe", "Suffolk", "UK", "IP11 3SY"),
         ]
     else:
         # old_b1.db (Single-Level Company Valuation):
-        # FDMSYD, BDLMEL, MFTBNE, VGLPER
-        primary_whs = "FDMSYD"
-        whs_origin = "FDMSYD"
-        whs_transit = "BDLMEL"
-        whs_dest = "FDMSYD"
-        whs_reg1 = "BDLMEL"
-        whs_reg2 = "MFTBNE"
+        # AU-SYD, AU-MEL, AU-BNE, VGLPER
+        primary_whs = "AU-SYD"
+        whs_origin = "AU-SYD"
+        whs_transit = "AU-SYD"
+        whs_dest = "AU-SYD"
+        whs_reg1 = "AU-MEL"
+        whs_reg2 = "AU-BNE"
         whs_reg3 = "VGLPER"
-        whs_reg4 = "FDMSYD"
+        whs_reg4 = "AU-SYD"
 
         owhs_data = [
-            ("FDMSYD", "FDM Sydney Central DC", "Bldg A", "100 Logistics Way", "Sydney", "NSW", "2000"),
-            ("BDLMEL", "BDL Melbourne Logistics Hub", "Bldg 4", "50 Industrial Ave", "Melbourne", "VIC", "3000"),
-            ("MFTBNE", "MFT Brisbane Distribution Center", "Bldg 2", "12 Airport Dr", "Brisbane", "QLD", "4000"),
+            ("AU-SYD", "AU Warehouse Sydney Central DC", "Bldg A", "100 Logistics Way", "Sydney", "NSW", "2000"),
+            ("AU-MEL", "AU Warehouse Melbourne Logistics Hub", "Bldg 4", "50 Industrial Ave", "Melbourne", "VIC", "3000"),
+            ("AU-BNE", "AU Warehouse Brisbane Distribution Center", "Bldg 2", "12 Airport Dr", "Brisbane", "QLD", "4000"),
             ("VGLPER", "VGL Perth Western Logistics Hub", "Unit 8", "88 Freight Rd", "Perth", "WA", "6000"),
         ]
 
@@ -1379,9 +1379,9 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
             oitw_data.append((item_code, whs_reg1, round(on_hand_tot * 0.25, 1), round(comm_tot * 0.25, 1), round(order_tot * 0.25, 1), avg_p, 10.0, 300.0))
             oitw_data.append((item_code, whs_reg2, round(on_hand_tot * 0.15, 1), round(comm_tot * 0.15, 1), round(order_tot * 0.15, 1), avg_p, 5.0, 150.0))
         else:
-            oitw_data.append((item_code, "FDMSYD", round(on_hand_tot * 0.4, 1), round(comm_tot * 0.4, 1), round(order_tot * 0.4, 1), 0.0, 20.0, 500.0))
-            oitw_data.append((item_code, "BDLMEL", round(on_hand_tot * 0.3, 1), round(comm_tot * 0.3, 1), round(order_tot * 0.3, 1), 0.0, 10.0, 300.0))
-            oitw_data.append((item_code, "MFTBNE", round(on_hand_tot * 0.2, 1), round(comm_tot * 0.2, 1), round(order_tot * 0.2, 1), 0.0, 5.0, 150.0))
+            oitw_data.append((item_code, "AU-SYD", round(on_hand_tot * 0.4, 1), round(comm_tot * 0.4, 1), round(order_tot * 0.4, 1), 0.0, 20.0, 500.0))
+            oitw_data.append((item_code, "AU-MEL", round(on_hand_tot * 0.3, 1), round(comm_tot * 0.3, 1), round(order_tot * 0.3, 1), 0.0, 10.0, 300.0))
+            oitw_data.append((item_code, "AU-BNE", round(on_hand_tot * 0.2, 1), round(comm_tot * 0.2, 1), round(order_tot * 0.2, 1), 0.0, 5.0, 150.0))
             oitw_data.append((item_code, "VGLPER", round(on_hand_tot * 0.1, 1), round(comm_tot * 0.1, 1), round(order_tot * 0.1, 1), 0.0, 5.0, 100.0))
 
     # Category 3 - Imported Hardware & Automation
@@ -1413,9 +1413,9 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
             oitw_data.append((item_code, whs_reg1, 60.0, 7.0, 15.0, avg_imp_p, 10.0, 300.0))
             oitw_data.append((item_code, whs_reg2, 40.0, 3.0, 10.0, avg_imp_p, 5.0, 150.0))
         else:
-            oitw_data.append((item_code, "FDMSYD", 80.0, 10.0, 20.0, 0.0, 20.0, 500.0))
-            oitw_data.append((item_code, "BDLMEL", 50.0, 8.0, 15.0, 0.0, 10.0, 300.0))
-            oitw_data.append((item_code, "MFTBNE", 40.0, 5.0, 10.0, 0.0, 5.0, 150.0))
+            oitw_data.append((item_code, "AU-SYD", 80.0, 10.0, 20.0, 0.0, 20.0, 500.0))
+            oitw_data.append((item_code, "AU-MEL", 50.0, 8.0, 15.0, 0.0, 10.0, 300.0))
+            oitw_data.append((item_code, "AU-BNE", 40.0, 5.0, 10.0, 0.0, 5.0, 150.0))
             oitw_data.append((item_code, "VGLPER", 30.0, 2.0, 5.0, 0.0, 5.0, 100.0))
 
     # Category 4 - Robotics & Intercompany Automation
@@ -1438,19 +1438,19 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
 
         avg_ic_p = base_c if stock_by_whs else 0.0
         if stock_by_whs:
-            # new_b1.db (Multi-Warehouse Costing): ICCNGB, ICCSIT, NZNTH, NZSTH, NZSIT, UKWYF, UKSIT
-            oitw_data.append((item_code, "ICCNGB", 100.0, 10.0, 20.0, avg_ic_p, 20.0, 500.0))
+            # new_b1.db (Multi-Warehouse Costing): ICCChina, ICCSIT, NZNTH, NZSTH, NZSIT, EuropeMarketPlace, EuropeSIT
+            oitw_data.append((item_code, "ICCChina", 100.0, 10.0, 20.0, avg_ic_p, 20.0, 500.0))
             oitw_data.append((item_code, "ICCSIT", 50.0, 0.0, 0.0, avg_ic_p, 0.0, 500.0))
             oitw_data.append((item_code, "NZNTH", 150.0, 10.0, 20.0, avg_ic_p, 30.0, 500.0))
             oitw_data.append((item_code, "NZSTH", 50.0, 5.0, 10.0, avg_ic_p, 10.0, 300.0))
             oitw_data.append((item_code, "NZSIT", 30.0, 0.0, 0.0, avg_ic_p, 0.0, 200.0))
-            oitw_data.append((item_code, "UKWYF", 40.0, 5.0, 10.0, avg_ic_p, 10.0, 200.0))
-            oitw_data.append((item_code, "UKSIT", 20.0, 0.0, 0.0, avg_ic_p, 0.0, 100.0))
+            oitw_data.append((item_code, "EuropeMarketPlace", 40.0, 5.0, 10.0, avg_ic_p, 10.0, 200.0))
+            oitw_data.append((item_code, "EuropeSIT", 20.0, 0.0, 0.0, avg_ic_p, 0.0, 100.0))
         else:
-            # old_b1.db (Single-Level Company Valuation): FDMSYD, BDLMEL, MFTBNE, VGLPER
-            oitw_data.append((item_code, "FDMSYD", 150.0, 10.0, 20.0, 0.0, 30.0, 500.0))
-            oitw_data.append((item_code, "BDLMEL", 100.0, 5.0, 10.0, 0.0, 20.0, 300.0))
-            oitw_data.append((item_code, "MFTBNE", 50.0, 3.0, 5.0, 0.0, 10.0, 200.0))
+            # old_b1.db (Single-Level Company Valuation): AU-SYD, AU-MEL, AU-BNE, VGLPER
+            oitw_data.append((item_code, "AU-SYD", 150.0, 10.0, 20.0, 0.0, 30.0, 500.0))
+            oitw_data.append((item_code, "AU-MEL", 100.0, 5.0, 10.0, 0.0, 20.0, 300.0))
+            oitw_data.append((item_code, "AU-BNE", 50.0, 3.0, 5.0, 0.0, 10.0, 200.0))
             oitw_data.append((item_code, "VGLPER", 50.0, 2.0, 5.0, 0.0, 5.0, 100.0))
 
     cursor.executemany("INSERT INTO OITM VALUES (?, ?, ?, ?, ?, ?, ?, ?)", oitm_data)
@@ -1656,7 +1656,7 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
     # -------------------------------------------------------------
     # SEED 11: OPDN & PDN1 (Goods Receipt POs with Multi-Warehouse Deliveries)
     # -------------------------------------------------------------
-    target_whs_pool = [whs_dest, whs_reg1, whs_reg2] if stock_by_whs else ["FDMSYD", "BDLMEL", "MFTBNE", "VGLPER"]
+    target_whs_pool = [whs_dest, whs_reg1, whs_reg2] if stock_by_whs else ["AU-SYD", "AU-MEL", "AU-BNE", "VGLPER"]
     for i in range(1, 101):
         doc_num = 6000 + i
         doc_date = base_date + timedelta(days=random.randint(10, 60))
@@ -1678,7 +1678,7 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
     # Foreign Import GRPOs for Category 3 items
     foreign_vendor_code, foreign_vendor_name = "V-1005", "Global Precision Automation Corp"
     for idx, imp_code in enumerate(imported_item_codes, 1):
-        whs_splits = [(whs_dest, 100.0), (whs_reg1, 60.0), (whs_reg2, 40.0)] if stock_by_whs else [("FDMSYD", 80.0), ("BDLMEL", 50.0), ("MFTBNE", 40.0), ("VGLPER", 30.0)]
+        whs_splits = [(whs_dest, 100.0), (whs_reg1, 60.0), (whs_reg2, 40.0)] if stock_by_whs else [("AU-SYD", 80.0), ("AU-MEL", 50.0), ("AU-BNE", 40.0), ("VGLPER", 30.0)]
         for w_idx, (whs_code_imp, qty) in enumerate(whs_splits, 1):
             doc_num = 6100 + (idx - 1) * len(whs_splits) + w_idx
             doc_date = (base_date + timedelta(days=10 + idx * 3)).strftime("%Y-%m-%d")
@@ -2006,11 +2006,11 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
         for line_idx, (p_line, itm_code, itm_desc, qty, orig_cost, line_tot, whs_code) in enumerate(pdn_lines):
             doc_items_tot += line_tot
             fees_for_line = []
-            if whs_code in ["NZNTH", "FDMSYD"]:
+            if whs_code in ["NZNTH", "AU-SYD"]:
                 fees_for_line.append(("LC001", round(qty * 25.0, 2)))
                 fees_for_line.append(("LC002", round(qty * 10.0, 2)))
                 fees_for_line.append(("LC005", round(qty * 8.0, 2)))
-            elif whs_code in ["NZSTH", "BDLMEL"]:
+            elif whs_code in ["NZSTH", "AU-MEL"]:
                 fees_for_line.append(("LC001", round(qty * 25.0, 2)))
                 fees_for_line.append(("LC002", round(qty * 10.0, 2)))
                 fees_for_line.append(("LC010", round(qty * 45.0, 2)))
@@ -2072,8 +2072,8 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
 
     # -------------------------------------------------------------
     # SEED 23B: Dedicated Intercompany Transfer & Stacked Landed Cost Journey
-    # In new_b1.db: Factory FOB at ICCNGB -> Landed Cost -> Transfer ICCSIT -> Intercompany GRPO NZNTH -> Goods Issue ICCSIT -> Dest Landed Cost Overwrite -> Replenishment NZSTH / UKWYF
-    # In old_b1.db: Factory FOB at FDMSYD -> Accumulate Landed Costs globally into OITM.AvgPrice -> Transfer BDLMEL / MFTBNE / VGLPER
+    # In new_b1.db: Factory FOB at ICCChina -> Landed Cost -> Transfer ICCSIT -> Intercompany GRPO NZNTH -> Goods Issue ICCSIT -> Dest Landed Cost Overwrite -> Replenishment NZSTH / EuropeMarketPlace
+    # In old_b1.db: Factory FOB at AU Warehouse -> Accumulate Landed Costs globally into OITM.AvgPrice -> Transfer AU Warehouse / AU Warehouse / VGLPER
     # -------------------------------------------------------------
     foreign_vendor_code, foreign_vendor_name = "V-1005", "Global Precision Automation Corp"
 
@@ -2217,8 +2217,8 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
             cursor.execute("UPDATE OITW SET AvgPrice = ? WHERE ItemCode = ? AND WhsCode = 'NZNTH'", (cost_dest_final, imp_code))
             cursor.execute("UPDATE OITW SET AvgPrice = ? WHERE ItemCode = ? AND WhsCode = 'NZSTH'", (round(cost_dest_final + 23.0, 2), imp_code))
             cursor.execute("UPDATE OITW SET AvgPrice = ? WHERE ItemCode = ? AND WhsCode = 'NZSIT'", (cost_transit, imp_code))
-            cursor.execute("UPDATE OITW SET AvgPrice = ? WHERE ItemCode = ? AND WhsCode = 'UKWYF'", (round(cost_dest_final + 38.0, 2), imp_code))
-            cursor.execute("UPDATE OITW SET AvgPrice = ? WHERE ItemCode = ? AND WhsCode = 'UKSIT'", (cost_transit, imp_code))
+            cursor.execute("UPDATE OITW SET AvgPrice = ? WHERE ItemCode = ? AND WhsCode = 'EuropeMarketPlace'", (round(cost_dest_final + 38.0, 2), imp_code))
+            cursor.execute("UPDATE OITW SET AvgPrice = ? WHERE ItemCode = ? AND WhsCode = 'EuropeSIT'", (cost_transit, imp_code))
 
             # Recompute weighted moving average in OITM.AvgPrice
             cursor.execute("SELECT OnHand, AvgPrice FROM OITW WHERE ItemCode = ?", (imp_code,))
@@ -2262,8 +2262,8 @@ def init_database(db_name="new_b1.db", stock_by_whs=True):
         doc_num = 4000 + i
         doc_date = (base_date + timedelta(days=random.randint(1, 55))).strftime("%Y-%m-%d")
         due_date = (base_date + timedelta(days=random.randint(5, 60))).strftime("%Y-%m-%d")
-        from_w = whs_dest if stock_by_whs else "FDMSYD"
-        to_w = whs_reg1 if stock_by_whs else "BDLMEL"
+        from_w = whs_dest if stock_by_whs else "AU-SYD"
+        to_w = whs_reg1 if stock_by_whs else "AU-MEL"
         cursor.execute("INSERT INTO OWTQ (DocNum, DocDate, DocDueDate, FromWhsCod, ToWhsCode, DocStatus, Comments) VALUES (?, ?, ?, ?, ?, 'C', 'Stock replenishment request')",
                        (doc_num, doc_date, due_date, from_w, to_w))
         q_entry = cursor.lastrowid

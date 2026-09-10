@@ -194,16 +194,16 @@ INNER JOIN OWHS T2 ON T0.WhsCode = T2.WhsCode
 WHERE T0.ItemCode LIKE 'ITM-IC-%'
 ORDER BY T0.ItemCode, 
     CASE T0.WhsCode 
-        WHEN 'ICCNGB' THEN 1 
+        WHEN 'ICCChina' THEN 1 
         WHEN 'ICCSIT' THEN 2 
         WHEN 'NZNTH' THEN 3 
         WHEN 'NZSTH' THEN 4 
         WHEN 'NZSIT' THEN 5 
-        WHEN 'UKWYF' THEN 6 
-        WHEN 'UKSIT' THEN 7 
-        WHEN 'FDMSYD' THEN 10 
-        WHEN 'BDLMEL' THEN 11 
-        WHEN 'MFTBNE' THEN 12 
+        WHEN 'EuropeMarketPlace' THEN 6 
+        WHEN 'EuropeSIT' THEN 7 
+        WHEN 'AU-SYD' THEN 10 
+        WHEN 'AU-MEL' THEN 11 
+        WHEN 'AU-BNE' THEN 12 
         WHEN 'VGLPER' THEN 13 
         ELSE 99 
     END

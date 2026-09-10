@@ -1,6 +1,6 @@
 # SAP Business One Process Design Document
 ## Process Variant: `PV-ICC-SLC-01`
-### Multi-Leg Intercompany Transfer with USD Factory Procurement & Two-Stage Stacked Landed Costing (`ICCNGB` → `ICCSIT` → `NZNTH` / `UKWYF`)
+### Multi-Leg Intercompany Transfer with USD Factory Procurement & Two-Stage Stacked Landed Costing (`ICCChina` → `ICCSIT` → `NZNTH` / `EuropeMarketPlace`)
 
 ---
 
@@ -11,8 +11,8 @@
 | **Process Variant Name** | **USD Factory Consolidation to AUD Destination Multi-Leg Stacked Landed Cost & In-Transit Transfer Lifecycle** |
 | **System / ERP** | SAP Business One (SQL / HANA / Cloud Simulation) |
 | **Module Scope** | Inventory & Warehouse Management, Purchasing (AP), Landed Costs, Multi-Currency Accounting |
-| **new_b1.db Warehouses** | **`ICCNGB`** (Ningbo Origin), **`ICCSIT`** (Ocean In-Transit), **`NZNTH`** (NZ North DC), **`NZSTH`** (NZ South DC), **`NZSIT`** (NZ Coastal In-Transit), **`UKWYF`** (UK West Yorkshire), **`UKSIT`** (UK Sea In-Transit) |
-| **old_b1.db Warehouses** | **`FDMSYD`** (Sydney Central DC), **`BDLMEL`** (Melbourne Hub), **`MFTBNE`** (Brisbane DC), **`VGLPER`** (Perth Hub) |
+| **new_b1.db Warehouses** | **`ICCChina`** (Ningbo Origin), **`ICCSIT`** (Ocean In-Transit), **`NZNTH`** (NZ North DC), **`NZSTH`** (NZ South DC), **`NZSIT`** (NZ Coastal In-Transit), **`EuropeMarketPlace`** (UK West Yorkshire), **`EuropeSIT`** (UK Sea In-Transit) |
+| **old_b1.db Warehouses** | **`AU Warehouse`** (Sydney Central DC), **`AU Warehouse`** (Melbourne Hub), **`AU Warehouse`** (Brisbane DC), **`VGLPER`** (Perth Hub) |
 | **Local Currency (LC)** | **AUD ($)** |
 | **Foreign Currency (FC)** | **USD ($)** (Strictly for External Factory PO) |
 | **Status** | **Approved / Production Ready** |
@@ -59,7 +59,7 @@ The enterprise architecture is structured under a three-tiered governance model:
 │ 3. OPERATIONAL RULES (System Execution Logic)                                                          │
 │    • Rule 1.1: OPOR DocCur = 'USD', PriceFC locked in POR1 (no G/L journal entries created).           │
 │    • Rule 2.1: OPDN posts in AUD at spot rate (0.65): Dr 100040 Inventory / Cr 200060 Allocation.      │
-│    • Rule 3.1: OWTR to ICCSIT/NZSIT/UKSIT: Dr 100050 SIT Asset / Cr 100040 Warehouse Stock.           │
+│    • Rule 3.1: OWTR to ICCSIT/NZSIT/EuropeSIT: Dr 100050 SIT Asset / Cr 100040 Warehouse Stock.           │
 │    • Rule 4.1: Cross-DB Intercompany: Origin new_b1 posts OIGE out from ICCSIT (Dr 110020 / Cr 100050) │
 │                ↔ Destination old_b1 posts OPDN at AU DC (Dr 100010 / Cr 200030) at $424.00 AUD.        │
 │    • Rule 5.1: IF Doc = OPDN THEN Post OIPF 'E' (Dr Inventory / Cr 200050); WHEN Invoices Arrive THEN │
@@ -287,7 +287,7 @@ In SAP Business One enterprise implementations, physical inventory transfers fal
 │   │    Customer = 'AU_ENTITY'               │       │    Vendor = 'ICC_ENTITY'                     │   │
 │   │                                         │       │                                              │   │
 │   │ 2. Outward Delivery (ODLN)              │ ───►  │ 2. Inbound Goods Receipt PO (OPDN)           │   │
-│   │    From: ICCNGB / ICCSIT                │ (EDI) │    To: BDLMEL / FDMSYD                       │   │
+│   │    From: ICCChina / ICCSIT                │ (EDI) │    To: AU Warehouse / AU Warehouse                       │   │
 │   │    Carrying Source MWAG ($424.00 AUD)   │       │    Base Cost = $424.00 AUD                   │   │
 │   │                                         │       │                                              │   │
 │   │ 3. Intercompany AR Invoice (OINV)       │ ───►  │ 3. Inbound Landed Costs (OIPF)               │   │
@@ -305,9 +305,9 @@ In SAP Business One enterprise implementations, physical inventory transfers fal
 
 | Movement Scope | Applicable Databases | Correct SAP B1 Document Lifecycle | Financial Mechanism & G/L Impact |
 | :--- | :--- | :--- | :--- |
-| **Intra-Company Leg**<br>*(e.g., `ICCNGB` → `ICCSIT`)* | Single DB (`new_b1.db`) | **`OWTQ` (Request) → `OWTR` (Transfer)** | Single internal journal entry (`OJDT`):<br>**Dr** In-Transit Asset (`100050`) / **Cr** Inventory (`100040`) |
+| **Intra-Company Leg**<br>*(e.g., `ICCChina` → `ICCSIT`)* | Single DB (`new_b1.db`) | **`OWTQ` (Request) → `OWTR` (Transfer)** | Single internal journal entry (`OJDT`):<br>**Dr** In-Transit Asset (`100050`) / **Cr** Inventory (`100040`) |
 | **Intra-Company Leg**<br>*(e.g., `NZNTH` → `NZSTH`)* | Single DB (`new_b1.db`) | **`OWTQ` (Request) → `OWTR` (Transfer)** | Single internal journal entry (`OJDT`):<br>**Dr** `NZSTH` Stock (`100040`) / **Cr** `NZNTH` Stock (`100040`) |
-| **Cross-DB Intercompany Leg**<br>*(e.g., `ICCSIT` in `new_b1.db` → `BDLMEL` in `old_b1.db`)* | **Hybrid DBs**<br>(`new_b1.db` + `old_b1.db`) | **`ODLN`/`OINV` (Origin DB) → `OPDN`/`OPCH` (Dest DB)** | **Origin DB**: Dr Intercompany AR (`110020`) / Cr Inventory (`100050`)<br>**Dest DB**: Dr Inventory (`100040`) / Cr Intercompany AP (`200030`) |
+| **Cross-DB Intercompany Leg**<br>*(e.g., `ICCSIT` in `new_b1.db` → `AU Warehouse` in `old_b1.db`)* | **Hybrid DBs**<br>(`new_b1.db` + `old_b1.db`) | **`ODLN`/`OINV` (Origin DB) → `OPDN`/`OPCH` (Dest DB)** | **Origin DB**: Dr Intercompany AR (`110020`) / Cr Inventory (`100050`)<br>**Dest DB**: Dr Inventory (`100040`) / Cr Intercompany AP (`200030`) |
 
 ### 5.2 Architectural Rules for Split Databases
 
@@ -320,7 +320,7 @@ In SAP Business One enterprise implementations, physical inventory transfers fal
    - **Destination Entity (`old_b1.db`)**: Treats the ICC entity as a Business Partner Vendor (`OCRD.CardType = 'S'`). Issues an Intercompany Purchase Order (`OPOR`), receives goods via Goods Receipt PO (`OPDN`) at **$424.00 AUD**, capitalizes destination landed costs via `OIPF` (+**$98.00 AUD**), and posts the Intercompany AP Invoice (`OPCH`).
 
 3. **Alternative Direct Integration Bridge (`OIGE` → `OPDN` / `OIGN`)**:
-   - If configured via SAP Business One Integration Framework (B1iF) or automated Service Layer without generating full commercial AR/AP tax invoices, the transfer executes as a coordinated **Goods Issue (`OIGE`)** out of `ICCSIT` linked to an inbound **Goods Receipt PO / Receipt (`OPDN`/`OIGN`)** into `BDLMEL`/`FDMSYD`, offsetting via dedicated Intercompany In-Transit Clearing G/L accounts (`100099`).
+   - If configured via SAP Business One Integration Framework (B1iF) or automated Service Layer without generating full commercial AR/AP tax invoices, the transfer executes as a coordinated **Goods Issue (`OIGE`)** out of `ICCSIT` linked to an inbound **Goods Receipt PO / Receipt (`OPDN`/`OIGN`)** into `AU Warehouse`/`AU Warehouse`, offsetting via dedicated Intercompany In-Transit Clearing G/L accounts (`100099`).
 
 ---
 
@@ -399,16 +399,16 @@ INNER JOIN OWHS T2 ON T0.WhsCode = T2.WhsCode
 WHERE T0.ItemCode LIKE 'ITM-IC-%'
 ORDER BY T0.ItemCode, 
     CASE T0.WhsCode 
-        WHEN 'ICCNGB' THEN 1 
+        WHEN 'ICCChina' THEN 1 
         WHEN 'ICCSIT' THEN 2 
         WHEN 'NZNTH' THEN 3 
         WHEN 'NZSTH' THEN 4 
         WHEN 'NZSIT' THEN 5 
-        WHEN 'UKWYF' THEN 6 
-        WHEN 'UKSIT' THEN 7 
-        WHEN 'FDMSYD' THEN 10 
-        WHEN 'BDLMEL' THEN 11 
-        WHEN 'MFTBNE' THEN 12 
+        WHEN 'EuropeMarketPlace' THEN 6 
+        WHEN 'EuropeSIT' THEN 7 
+        WHEN 'AU Warehouse' THEN 10 
+        WHEN 'AU Warehouse' THEN 11 
+        WHEN 'AU Warehouse' THEN 12 
         WHEN 'VGLPER' THEN 13 
         ELSE 99 
     END;
@@ -464,11 +464,11 @@ SAP Business One supports two distinct inventory valuation models configured in 
                           │                                                                 │
     ┌─────────────────────┴─────────────────────┐                     ┌─────────────────────┴─────────────────────┐
     │ • OITW.AvgPrice: ACTIVE per warehouse     │                     │ • OITW.AvgPrice: DISABLED (0.00 AUD)      │
-    │ • ICCNGB: $424.00 AUD (FOB + Origin LC)   │                     │ • All warehouses share single cost basis  │
+    │ • ICCChina: $424.00 AUD (FOB + Origin LC)   │                     │ • All warehouses share single cost basis  │
     │ • ICCSIT: $424.00 AUD (In-Transit ocean)  │                     │ • OITM.AvgPrice: ACTIVE global rollup     │
     │ • NZNTH : $522.00 AUD (Destination Actual)│                     │ • ITM-IC-001 OITM.AvgPrice = $522.00 AUD  │
     │ • NZSTH : $545.00 AUD (Regional Stacked)  │                     │ • Standardizes COGS across all regions    │
-    │ • UKWYF : $560.00 AUD (UK Regional Hub)   │                     │   (FDMSYD, BDLMEL, MFTBNE, VGLPER)        │
+    │ • EuropeMarketPlace : $560.00 AUD (UK Regional Hub)   │                     │   (AU Warehouse, AU Warehouse, AU Warehouse, VGLPER)        │
     └───────────────────────────────────────────┘                     └───────────────────────────────────────────┘
 ```
 
@@ -477,10 +477,10 @@ SAP Business One supports two distinct inventory valuation models configured in 
 | Attribute | `new_b1.db` (Multi-Warehouse Costing) | `old_b1.db` (Single Company-Level Valuation) |
 | :--- | :--- | :--- |
 | **SAP B1 System Setting** | `Manage Stock by Warehouse = 'Y'` | `Manage Stock by Warehouse = 'N'` |
-| **Configured Warehouses** | `ICCNGB`, `ICCSIT`, `NZNTH`, `NZSTH`, `NZSIT`, `UKWYF`, `UKSIT` | `FDMSYD`, `BDLMEL`, `MFTBNE`, `VGLPER` |
+| **Configured Warehouses** | `ICCChina`, `ICCSIT`, `NZNTH`, `NZSTH`, `NZSIT`, `EuropeMarketPlace`, `EuropeSIT` | `AU Warehouse`, `AU Warehouse`, `AU Warehouse`, `VGLPER` |
 | **Warehouse Moving Avg (`OITW.AvgPrice`)** | **Enabled & Distinct per Warehouse** | **Disabled (`0.00 AUD` across all 460 rows)** |
 | **Company Moving Avg (`OITM.AvgPrice`)** | Enterprise-wide weighted average ($483.52 AUD) | **Single source of truth for all inventory valuation ($522.00 AUD)** |
 | **Landed Cost Capitalization** | Capitalized directly into specific warehouse stock (`OITW.AvgPrice` of target warehouse) | Capitalized globally into the enterprise item master (`OITM.AvgPrice`) |
-| **Intercompany & In-Transit Costing** | Tracks progressive stacked cost from $424 at `ICCNGB`/`ICCSIT` to $522 at `NZNTH`, $545 at `NZSTH`, and $560 at `UKWYF` | All transactions across `FDMSYD`, `BDLMEL`, `MFTBNE`, and `VGLPER` issue/receive at global `OITM.AvgPrice` ($522) |
+| **Intercompany & In-Transit Costing** | Tracks progressive stacked cost from $424 at `ICCChina`/`ICCSIT` to $522 at `NZNTH`, $545 at `NZSTH`, and $560 at `EuropeMarketPlace` | All transactions across `AU Warehouse`, `AU Warehouse`, `AU Warehouse`, and `VGLPER` issue/receive at global `OITM.AvgPrice` ($522) |
 | **Use Case / Business Fit** | Complex global supply chains with multi-region distribution networks & distinct landed cost layers | Centralized operations or single-country DC networks seeking simplified uniform costing |
 

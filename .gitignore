@@ -22,3 +22,6 @@ Thumbs.db
 *.db-journal
 *.db-wal
 *.db-shm
+
+# Temporary scratch scripts
+scratch/

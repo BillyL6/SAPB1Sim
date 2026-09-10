@@ -24,9 +24,9 @@ The SAP Business One simulation environment operates across two distinct databas
 ├───────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
 │ • Valuation Level: Item-Warehouse (`OITW.AvgPrice`)   │ • Valuation Level: Item-Company (`OITM.AvgPrice`)│
 │ • Independent Moving Average per Regional DC & Hub:   │ • Single blended Moving Average across all AU  │
-│   - ICCNGB: Origin Base + Handling ($424.00 AUD)      │   warehouses:                                  │
-│   - ICCSIT / UKSIT / NZSIT: Transferred at MWAG       │   - FDMSYD / BDLMEL share $522.00 AUD          │
-│   - NZNTH ($522 AUD) / NZSTH ($545 AUD) / UKWYF ($560)│ • Relies on global material subledger.         │
+│   - ICCChina: Origin Base + Handling ($424.00 AUD)      │   warehouses:                                  │
+│   - ICCSIT / EuropeSIT / NZSIT: Transferred at MWAG       │   - AU Warehouses share $522.00 AUD          │
+│   - NZNTH ($522 AUD) / NZSTH ($545 AUD) / EuropeMarketPlace ($560)│ • Relies on global material subledger.         │
 │ • Full Multi-Leg Stacked Landed Cost Support (`OIPF`) │ • Direct Import single-stage costing focus.    │
 └───────────────────────────────────────────────────────┴────────────────────────────────────────────────┘
 ```
@@ -107,7 +107,7 @@ Stores warehouse-specific stock levels, reservations, bin assignments, and local
 | Field Name | Type | Key | Description |
 | :--- | :--- | :---: | :--- |
 | `ItemCode` | `TEXT` | **PK, FK** | Item Code (FK to `OITM.ItemCode`). |
-| `WhsCode` | `TEXT` | **PK, FK** | Warehouse Code (FK to `OWHS.WhsCode`, e.g. `'ICCNGB'`, `'FDMSYD'`). |
+| `WhsCode` | `TEXT` | **PK, FK** | Warehouse Code (FK to `OWHS.WhsCode`, e.g. `'ICCChina'`, `'AU Warehouse'`). |
 | `OnHand` | `REAL` | | Physical stock quantity currently located in this specific warehouse. |
 | `IsCommited` | `REAL` | | Allocated stock reserved for picking in this warehouse. |
 | `OnOrder` | `REAL` | | Inbound quantity ordered for delivery into this specific warehouse. |
@@ -120,7 +120,7 @@ Defines physical logistics distribution centers, origin hubs, port staging areas
 
 | Field Name | Type | Key | Description |
 | :--- | :--- | :---: | :--- |
-| `WhsCode` | `TEXT` | **PK** | Unique Warehouse Code (e.g. `'ICCNGB'`, `'ICCSIT'`, `'FDMSYD'`, `'NZNTH'`, `'UKWYF'`). |
+| `WhsCode` | `TEXT` | **PK** | Unique Warehouse Code (e.g. `'ICCChina'`, `'ICCSIT'`, `'AU Warehouse'`, `'NZNTH'`, `'EuropeMarketPlace'`). |
 | `WhsName` | `TEXT` | | Descriptive Warehouse Name. |
 | `Building` | `TEXT` | | Building or Facility Name. |
 | `Street` | `TEXT` | | Street Address. |
@@ -133,7 +133,7 @@ Maintains master records for Overseas Factory Vendors (`'S'`), Customs Brokers (
 
 | Field Name | Type | Key | Description |
 | :--- | :--- | :---: | :--- |
-| `CardCode` | `TEXT` | **PK** | Unique Business Partner Code (e.g. `'V-FACTORY-CN'`, `'C-WAYFAIR-UK'`). |
+| `CardCode` | `TEXT` | **PK** | Unique Business Partner Code (e.g. `'V-FACTORY-CN'`, `'C-EUROMKT-UK'`). |
 | `CardName` | `TEXT` | | Registered Legal Name. |
 | `CardType` | `TEXT` | | Partner Classification (`'C'` = Customer, `'S'` = Vendor/Supplier). |
 | `GroupCode` | `INTEGER` | **FK** | Business Partner Group (FK to `OCRG`). |

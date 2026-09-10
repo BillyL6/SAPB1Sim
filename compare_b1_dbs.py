@@ -3,8 +3,8 @@ import sqlite3
 def compare_databases():
     print("=" * 110)
     print(" 🔍 SAP BUSINESS ONE DATABASE VALUATION & WAREHOUSE COMPARISON")
-    print("    'new_b1.db' (Multi-Warehouse Costing: StockByWhs = 'Y') -> ICCNGB, ICCSIT, NZNTH, NZSTH, NZSIT, UKWYF, UKSIT")
-    print("    'old_b1.db' (Single-Level Company Valuation: StockByWhs = 'N') -> FDMSYD, BDLMEL, MFTBNE, VGLPER")
+    print("    'new_b1.db' (Multi-Warehouse Costing: StockByWhs = 'Y') -> ICCChina, ICCSIT, NZNTH, NZSTH, NZSIT, EuropeMarketPlace, EuropeSIT")
+    print("    'old_b1.db' (Single-Level Company Valuation: StockByWhs = 'N') -> AU-SYD, AU-MEL, AU-BNE, VGLPER")
     print("=" * 110)
 
     conn_new = sqlite3.connect("new_b1.db")
@@ -19,10 +19,10 @@ def compare_databases():
     cur_old.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
     tables_old = cur_old.fetchone()[0]
 
-    cur_new.execute("SELECT WhsCode, WhsName, City, State FROM OWHS WHERE WhsCode IN ('ICCNGB', 'ICCSIT', 'NZNTH', 'NZSTH', 'NZSIT', 'UKWYF', 'UKSIT') ORDER BY WhsCode")
+    cur_new.execute("SELECT WhsCode, WhsName, City, State FROM OWHS WHERE WhsCode IN ('ICCChina', 'ICCSIT', 'NZNTH', 'NZSTH', 'NZSIT', 'EuropeMarketPlace', 'EuropeSIT') ORDER BY WhsCode")
     whs_new = cur_new.fetchall()
 
-    cur_old.execute("SELECT WhsCode, WhsName, City, State FROM OWHS WHERE WhsCode IN ('FDMSYD', 'BDLMEL', 'MFTBNE', 'VGLPER') ORDER BY WhsCode")
+    cur_old.execute("SELECT WhsCode, WhsName, City, State FROM OWHS WHERE WhsCode IN ('AU-SYD', 'AU-MEL', 'AU-BNE', 'VGLPER') ORDER BY WhsCode")
     whs_old = cur_old.fetchall()
 
     print(f"\n📊 Schema & Warehouse Infrastructure Verification:")
@@ -78,13 +78,13 @@ def compare_databases():
     WHERE T0.ItemCode IN ('ITM-IC-001', 'ITM-IC-002')
     ORDER BY T0.ItemCode, 
         CASE T0.WhsCode
-            WHEN 'ICCNGB' THEN 1
+            WHEN 'ICCChina' THEN 1
             WHEN 'ICCSIT' THEN 2
             WHEN 'NZNTH' THEN 3
             WHEN 'NZSTH' THEN 4
             WHEN 'NZSIT' THEN 5
-            WHEN 'UKWYF' THEN 6
-            WHEN 'UKSIT' THEN 7
+            WHEN 'EuropeMarketPlace' THEN 6
+            WHEN 'EuropeSIT' THEN 7
             ELSE 8
         END
     """)
