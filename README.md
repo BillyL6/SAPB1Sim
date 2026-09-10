@@ -1,198 +1,159 @@
-# SAP Business One (SAP B1) Enterprise Database Simulation
+# SAP Business One (SAP B1) Enterprise Simulation & Supply Chain Architecture
 
-A complete, self-contained SQLite simulation of the **SAP Business One (SAP B1)** enterprise schema, featuring **82 standard ERP tables** and realistic sample records with full relational foreign-key integrity across all core business modules.
+A complete, self-contained SQLite simulation of the **SAP Business One (SAP B1)** enterprise schema, featuring **82 standard ERP tables**, realistic transactional records, dual-database inventory valuation models (`new_b1.db` vs `old_b1.db`), and the complete **Product Supply and Distribution Network Process Hierarchy (31 Process Variants across 6 Node Groups)**.
 
 ---
 
-## 📑 Project Artifacts & Documentation
-- 📋 **Implementation Plan**: [implementation_plan.md](file:///Users/billy/.gemini/antigravity-ide/brain/6515debb-477e-4f5d-b674-003b5e0f4bf9/implementation_plan.md)
-- 🚶 **Walkthrough & Verification**: [walkthrough.md](file:///Users/billy/.gemini/antigravity-ide/brain/6515debb-477e-4f5d-b674-003b5e0f4bf9/walkthrough.md)
+## 📑 Enterprise Documentation Directory
+
+| Document | Description | Format / Path |
+| :--- | :--- | :--- |
+| 🗺️ **Process Hierarchy Map** | 5-Level Process Classification Framework (PCF), Routing Matrix, & 31 Master Processes | [**`Process_Hierarchy_Map.md`**](file:///Users/billy/SAPB1_Sim/Process_Hierarchy_Map.md) |
+| 📋 **Version Control & Changelog** | Release history, versioning governance (v1.0.0 – v2.4.0), and git commit audit | [**`Version_Control.md`**](file:///Users/billy/SAPB1_Sim/Version_Control.md) |
+| 🗄️ **Database Schema Reference** | Entity-Relationship Diagrams (ERD), Table Catalog (82 tables), and G/L triggers | [**`Schema.md`**](file:///Users/billy/SAPB1_Sim/Schema.md) |
+| 🚢 **Intercompany Process Design** | Multi-currency mechanics, two-stage landed costing, and SIT accounting | [**`ICC_Process_Design.md`**](file:///Users/billy/SAPB1_Sim/ICC_Process_Design.md) |
+| 📑 **Process Matrix (Word)** | Formal Enterprise Process Specification Document | [**`SAP_B1_Process_Design_Matrix.docx`**](file:///Users/billy/SAPB1_Sim/SAP_B1_Process_Design_Matrix.docx) |
+| 📊 **Process Matrix (Excel)** | Complete 4-Tab Color-Coded Process Workbook (Policies, RACI, 31 Routes) | [**`SAP_B1_Process_Design_Matrix.xlsx`**](file:///Users/billy/SAPB1_Sim/SAP_B1_Process_Design_Matrix.xlsx) |
+
+---
+
+## 🗺️ Product Supply & Distribution Network Process Hierarchy Register
+*(Directory of 6 Node Groups and 31 Level 3 Supply Network Routes & Control Workflow Groups — Last Updated 20260905 BL)*
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              5-LEVEL PROCESS ARCHITECTURE HIERARCHY                                    │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ LEVEL 1: Enterprise Value Stream (End-to-End Enterprise Chain)                                         │
+│   └── E2E-P2F: Global Factory Procurement to Customer Order Fulfillment                               │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ LEVEL 2: Supply Network Node Groups & Operational Domains (6 Node Groups)                              │
+│   ├── 2.1 [SNG-AU-ONLY]: old_b1.db Only (AU Domestic DC Network - 3 Routes)                            │
+│   ├── 2.2 [SNG-HYBRID]: old_b1.db + new_b1.db (Cross-System Intercompany & Trans-Tasman - 11 Routes)   │
+│   ├── 2.3 [SNG-NEW-ONLY]: new_b1.db Only (International Multi-Leg, NZ, UK & D2C Network - 9 Routes)    │
+│   ├── 2.4 [SNG-EXCEPTION]: Exception Processes (PO Reroutes & Container Discrepancies - 3 Routes)      │
+│   ├── 2.5 [SNG-RECONCILIATION]: Reconciliation Processes (Financial & Landed Cost Audit - 3 Routes)   │
+│   └── 2.6 [MD-MAINTENANCE]: Master Data Maintenance (Item & Business Partner Governance - 2 Routes)    │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ LEVEL 3: Supply Network Route Groups & Lifecycle Control Processes (31 Master Processes)              │
+│   └── Discrete route lifecycles (2.1.1 to 2.6.2) governing logistics, valuation, and fulfillment.     │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ LEVEL 4: Procedural Steps per Process (Sequential Procedural Milestones)                               │
+│   └── Standard Formula: "[Step]: [Role] Action Document (DocType) @ Loc -> [Milestone/Outcome]"       │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ LEVEL 5: Transaction Artifacts, System Tables & GL Journal Postings                                    │
+│   └── OPOR/POR1, OPDN/PDN1, OIPF/IPF1/IPF2, OWTR/WTR1, ORDR/RDR1, OINV/INV1, OJDT/JDT1, OINM          │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Master Supply Network Routing & Valuation Register (31 Process Variants)
+
+| Level 2 Process Group | Level 3 Code | Process Pathway & Title | Operating DBs | Origin Node | Transit Node | Destination Node | Primary Valuation & Costing Mechanism |
+| :--- | :---: | :--- | :---: | :--- | :--- | :--- | :--- |
+| **GROUP 2.1: old_b1.db ONLY (AU DOMESTIC DC NETWORK) — 3 Route Process Variants** | | | | | | | |
+| `2.1 [SNG-AU-ONLY]` | **`2.1.1`** | **Factory → AU Warehouse → AU Consumer** | `old_b1.db` | Factory | Direct B/L | `FDM/BDL/MF (AU whs)` | Two-Stage Destination Landed Cost (`OIPF 'E'` Accrual + `'A'` Overwrite). |
+| `2.1 [SNG-AU-ONLY]` | **`2.1.2`** | **Factory → AU Warehouse → NZ Consumer** | `old_b1.db` | Factory | Direct Freight | `FDM/BDL/MF (AU whs)` | Two-Stage AU Inward Landed Cost + Cross-Border Direct Invoicing. |
+| `2.1 [SNG-AU-ONLY]` | **`2.1.3`** | **Factory → AU Warehouse → UK Wayfair** | `old_b1.db` | Factory | Export Transit | `UKWYF (UK virtual whs)` | Two-Stage AU Inward Landed Cost + Long-Haul UK Freight Stack. |
+| **GROUP 2.2: HYBRID DBs (CROSS-SYSTEM INTERCOMPANY & TRANS-TASMAN RELAY) — 11 Route Process Variants** | | | | | | | |
+| `2.2 [SNG-HYBRID]` | **`2.2.1`** | **Factory → ICC → AU Warehouse → AU Consumer** | `new_b1 + old_b1` | `ICCNGB` | `ICCSIT` | `FDM/BDL/MF (AU whs)` | Two-Stage Stacked Cost (Origin LC + Dest LC Overwrite). |
+| `2.2 [SNG-HYBRID]` | **`2.2.2`** | **Factory → ICC → AU Warehouse → NZ Consumer** | `new_b1 + old_b1` | `ICCNGB` | `ICCSIT` | `FDM/BDL/MF (AU whs)` | Two-Stage Stacked Cost at AU DC + Direct Export OINV. |
+| `2.2 [SNG-HYBRID]` | **`2.2.3`** | **Factory → ICC → AU Whs → NZ Whs → NZ Consumer** | `new_b1 + old_b1` | `ICCNGB` | `ICCSIT + NZSIT` | `NZNTH/NZSTH (NZ whs)` | Triple-Stacked Cost: Origin LC + AU Landed + NZ Landed. |
+| `2.2 [SNG-HYBRID]` | **`2.2.4`** | **Factory → ICC → NZ Whs → AU Whs → AU Consumer** | `new_b1 + old_b1` | `ICCNGB` | `ICCSIT + NZSIT` | `FDM/BDL/MF (AU whs)` | Triple-Stacked Cost: Origin LC + NZ Landed + AU Landed. |
+| `2.2 [SNG-HYBRID]` | **`2.2.5`** | **Factory → AU Warehouse → NZ Warehouse → NZ Consumer** | `new_b1 + old_b1` | `FDMSYD` | `NZSIT` | `NZNTH/NZSTH (NZ whs)` | Direct AU Landed Cost + Trans-Tasman Relay at AU MWAG. |
+| `2.2 [SNG-HYBRID]` | **`2.2.6`** | **Factory → NZ Warehouse → AU Warehouse → AU Consumer** | `new_b1 + old_b1` | `NZNTH` | `NZSIT` | `FDM/BDL/MF (AU whs)` | Direct NZ Landed Cost + Trans-Tasman Relay at NZ MWAG. |
+| `2.2 [SNG-HYBRID]` | **`2.2.7`** | **Factory → ICC → AU Warehouse → UK Wayfair** | `new_b1 + old_b1` | `ICCNGB` | `ICCSIT + UKSIT` | `UKWYF (UK virtual whs)` | Two-Stage Stacked at AU + Long-Haul UK Export Freight. |
+| `2.2 [SNG-HYBRID]` | **`2.2.8`** | **Factory → AU Warehouse → NZ Warehouse → UK Wayfair** | `new_b1 + old_b1` | `FDMSYD` | `NZSIT + UKSIT` | `UKWYF (UK virtual whs)` | AU Landed + Trans-Tasman Relay + UK Re-Export Freight. |
+| `2.2 [SNG-HYBRID]` | **`2.2.9`** | **Factory → NZ Warehouse → AU Warehouse → UK Wayfair** | `new_b1 + old_b1` | `NZNTH` | `NZSIT + UKSIT` | `UKWYF (UK virtual whs)` | NZ Landed + Trans-Tasman Relay + UK Re-Export Freight. |
+| `2.2 [SNG-HYBRID]` | **`2.2.10`**| **Factory → ICC → AU Whs → NZ Whs → UK Wayfair** | `new_b1 + old_b1` | `ICCNGB` | `ICCSIT+NZSIT+UKSIT`| `UKWYF (UK virtual whs)` | Multi-Leg Stacked Costing Across 3 Intercompany Entities. |
+| `2.2 [SNG-HYBRID]` | **`2.2.11`**| **Factory → ICC → NZ Whs → AU Whs → UK Wayfair** | `new_b1 + old_b1` | `ICCNGB` | `ICCSIT+NZSIT+UKSIT`| `UKWYF (UK virtual whs)` | Multi-Leg Stacked Costing Across 3 Intercompany Entities. |
+| **GROUP 2.3: new_b1.db ONLY (INTERNATIONAL MULTI-LEG, NZ, UK & D2C NETWORK) — 9 Route Process Variants** | | | | | | | |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.1`** | **Factory → NZ Warehouse → NZ Consumer** | `new_b1.db` | Factory | Direct B/L | `NZNTH/NZSTH (NZ whs)` | Two-Stage NZ Destination Landed Cost (`OIPF 'E'` Accrual + `'A'` Overwrite). |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.2`** | **Factory → ICC → NZ Warehouse → NZ Consumer** | `new_b1.db` | `ICCNGB` | `ICCSIT + NZSIT` | `NZNTH/NZSTH (NZ whs)` | Two-Stage Stacked Cost (`$424 + $522 + $545 AUD`). |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.3`** | **Factory → UK Wayfair** | `new_b1.db` | Factory | Direct Voyage | `UKWYF (UK virtual whs)` | Two-Stage UK Destination Landed Cost (`OIPF 'E'` Accrual + `'A'` Overwrite). |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.4`** | **Factory → ICC → UK Wayfair** | `new_b1.db` | `ICCNGB` | `UKSIT` | `UKWYF (UK virtual whs)` | Two-Stage Stacked Cost (`$424 + $424 + $560 AUD`). |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.5`** | **Factory → NZ Warehouse → UK Wayfair** | `new_b1.db` | `NZNTH` | `UKSIT` | `UKWYF (UK virtual whs)` | NZ Inbound Landed Cost + UK Maritime Re-Export Freight. |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.6`** | **Factory → ICC → NZ Warehouse → UK Wayfair** | `new_b1.db` | `ICCNGB` | `ICCSIT + UKSIT` | `UKWYF (UK virtual whs)` | Two-Stage Stacked at NZ (`$522`) + UK Freight into UKWYF (`$560 AUD`). |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.7`** | **Factory → ICC → AU Consumer (D2C Air Express)** | `new_b1.db` | `ICCNGB` | Air Courier | AU Consumer | Origin Staging & Drop-Ship Landed Cost (Direct Air Courier). |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.8`** | **Factory → ICC → NZ Consumer (D2C Air Express)** | `new_b1.db` | `ICCNGB` | Air Courier | NZ Consumer | Origin Staging & Drop-Ship Landed Cost (Direct Air Courier). |
+| `2.3 [SNG-NEW-ONLY]`| **`2.3.9`** | **Factory → ICC → UK Consumer (D2C Air Express)** | `new_b1.db` | `ICCNGB` | Air Courier | UK Consumer | Origin Staging & Drop-Ship Landed Cost (Direct Air Courier). |
+| **GROUP 2.4: EXCEPTION PROCESSES (PO REROUTES & CONTAINER DISCREPANCIES) — 3 Process Variants** | | | | | | | |
+| `2.4 [SNG-EXCEPTION]`| **`2.4.1`** | **PO Changes from ICC to AU Warehouse** | `new_b1 → old_b1` | `ICCNGB` | Direct Port | `FDM/BDL/MF (AU whs)` | Cancels `new_b1` PO; re-issues direct import PO in `old_b1.db`. |
+| `2.4 [SNG-EXCEPTION]`| **`2.4.2`** | **PO Changes from AU Warehouse to ICC** | `old_b1 → new_b1` | `FDMSYD` | `ICCSIT` | `ICCNGB + AU` | Cancels `old_b1` PO; establishes multi-leg ICC PO in `new_b1.db`. |
+| `2.4 [SNG-EXCEPTION]`| **`2.4.3`** | **Intercompany Transfer Quantity Over/Under-Supply** | `new_b1 + old_b1` | `ICCSIT` | Wharf / Port | Any warehouses | Resolves variance: partial GRPO, transit loss write-off, or surplus receipt. |
+| **GROUP 2.5: RECONCILIATION PROCESSES (FINANCIAL & LANDED COST AUDIT) — 3 Process Variants** | | | | | | | |
+| `2.5 [SNG-RECONCILIATION]`| **`2.5.1`** | **Inventory Valuation Reconciliation** | `new_b1 + old_b1` | All Hubs | In-Transit | Balance Sheet | Monthly audit: Warehouse subledger (`OITW`) vs G/L Control (`100010`/`100050`). |
+| `2.5 [SNG-RECONCILIATION]`| **`2.5.2`** | **Landed Cost Entries Reconciliation** | `new_b1 + old_b1` | All Hubs | Accrual Clearing | `G/L 200050` | Reconciles Estimated (`OIPF 'E'`) vs Actual (`OIPF 'A'`) broker invoices to $0. |
+| `2.5 [SNG-RECONCILIATION]`| **`2.5.3`** | **Group Report Reconciliation** | `new_b1 + old_b1` | All Hubs | Consolidated Ledgers | Group Financial Statements | Intercompany elimination, group inventory valuation consolidation, and multi-entity profit reporting. |
+| **GROUP 2.6: MASTER DATA MAINTENANCE — 2 Process Variants** | | | | | | | |
+| `2.6 [MD-MAINTENANCE]`| **`2.6.1`** | **SAP B1 Inventory Item Master Maintenance** | `new_b1 + old_b1` | Master Setup | Warehouse Bins | Item Master Records | Item Code creation, valuation method setup (`OITM` vs `OITW`), purchasing/sales UoM, and barcode cataloging. |
+| `2.6 [MD-MAINTENANCE]`| **`2.6.2`** | **SAP B1 Business Partner Master Maintenance** | `new_b1 + old_b1` | Master Setup | Commercial Ledger | BP Master Records | Vendor/Customer setup (`OCRD`/`CRD1`), currency assignment (USD/AUD/NZD/GBP), payment terms (`OCTG`), and tax group mapping. |
+
+---
+
+## 🏛️ RACI Role Accountability & Document Segregation (Policy 9)
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              RACI GOVERNANCE & DOCUMENT OWNERSHIP                                      │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ • [Purchasing]:         OPOR (All Factory & Intercompany POs), OWTQ (All Transfer Requests)            │
+│ • [Logistics]:          OPDN (GRPO), OWTR (Transfers), OIGE (Goods Issue),                             │
+│                         OINV (Direct AR Invoice creation confirming physical order dispatch)           │
+│ • [Finance]:            OIPF 'E'/'A' (Landed Costs), Revenue & COGS Accounting Review,                 │
+│                         OJDT G/L Clearing Reconciliations (G/L 200050/100050/110020)                   │
+│ • [Sales]:              ORDR (Customer Sales Orders & Inventory Reservation)                           │
+│ • [Corporate Treasury]: ORCT (Customer Payment Settlement — Strictly Out of Operational Scope)         │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## 🗄️ Database Architecture & Table Overview (82 Tables)
 
-### 1. Master Data & Chart of Accounts
-- **`OACT`**: Chart of Accounts Master (Assets, Liabilities, Equity, Revenue, COGS, Operating Expenses).
-- **`OWHS`**: Warehouses Master Data (Primary Distribution Center, Regional Hubs, Storage Depots).
-- **`OCRD`**: Business Partner Master (`CardType` `'C'` for Customers, `'S'` for Suppliers/Vendors).
-- **`OITM`**: Item Master Data (`OnHand`, `IsCommited`, `OnOrder`, `AvgPrice`, `DfltWH`).
-- **`OITW`**: Item Warehouse Inventory Data (Stock levels distributed per warehouse).
+The simulation provides two full database instances:
+1. [**`new_b1.db`**](file:///Users/billy/SAPB1_Sim/new_b1.db): Multi-Warehouse Moving Average Costing (`OITW.AvgPrice` per regional DC & SIT hub).
+2. [**`old_b1.db`**](file:///Users/billy/SAPB1_Sim/old_b1.db): Company-Level Moving Average Valuation (`OITM.AvgPrice`).
 
-### 2. Banking & Payments (Order-to-Cash & Procure-to-Pay Settlement)
-- **`OCTG`**: Payment Terms Master (Net 30, Net 60, COD, Discounts).
-- **`ODSC`**: Bank Master Codes & House Banks (CBA, ANZ, Westpac, NAB, Macquarie).
-- **`ORCT` / `RCT2`**: Incoming Payments Header & Paid Invoices Line (Customer AR settlements).
-- **`OVPM` / `VPM2`**: Outgoing Payments Header & Paid Invoices Line (Vendor AP disbursements).
-
-### 3. Production & Manufacturing (BOM & Work Orders)
-- **`OITT` / `ITT1`**: Bill of Materials (BOM) Product Trees (Parent assembly & child components).
-- **`OWOR` / `WOR1`**: Production Orders Header & Component Issue Lines.
-- **`OIGN` / `IGN1`**: Goods Receipt from Production (Finished goods inward receipt).
-- **`OIGE` / `IGE1`**: Goods Issue to Production (Raw material consumption).
-
-### 4. Pricing, Tax Engine & Special Conditions
-- **`OPLN`**: Price Lists Master (Wholesale, Retail, Key Account, Clearance).
-- **`ITM1`**: Item Price List Matrix (Multi-tier pricing matrix per item).
-- **`OSPP` / `SPP1`**: Business Partner Special Prices & Volume Discount Tiers.
-- **`OSTC`**: Sales & Purchase Tax Codes (GST 10%, GST Free, Duty, Luxury Tax).
-
-### 5. Advanced Inventory: Batches, Serials, Bins & Cycle Counting
-- **`OBTN`**: Batch Numbers Master (Batch numbers, expiration dates, manufacturing dates).
-- **`OSRN`**: Serial Numbers Master (Individual serial number tracking per item).
-- **`OITL` / `ITL1`**: Inventory Transaction Log & Batch/Serial Allocation history.
-- **`OBIN`**: Warehouse Bin Locations (Aisle, rack, and shelf location hierarchy).
-- **`OINC` / `INC1`**: Physical Inventory Cycle Counting (Recorded vs counted variance).
-
-### 6. Purchasing & Accounts Payable (AP Pipeline)
-- **`OPRQ` / `PRQ1`**: Purchase Requests (Internal departmental requisition).
-- **`OPQT` / `PQT1`**: Purchase Quotations (Supplier price quote requests).
-- **`OPOR` / `POR1`**: Purchase Orders (Header & Lines).
-- **`OPDN` / `PDN1`**: Goods Receipt PO (GRPO - Inward inventory receipt).
-- **`OPCH` / `PCH1`**: AP Invoices (Vendor tax invoices & payables).
-- **`ORPC` / `RPC1`**: AP Credit Memos (Supplier returns and credit notes).
-
-### 7. Sales & Accounts Receivable (AR Pipeline)
-- **`OQUT` / `QUT1`**: Sales Quotations (Customer price quotes).
-- **`ORDR` / `RDR1`**: Sales Orders (Header & Lines).
-- **`ODLN` / `DLN1`**: Delivery Notes (Outward inventory dispatch).
-- **`ORDN` / `RDN1`**: Sales Returns (Goods return before credit memo).
-- **`OINV` / `INV1`**: AR Invoices (Customer tax invoices & receivables).
-- **`ORIN` / `RIN1`**: AR Credit Memos (Customer returns and credit adjustments).
-
-### 8. CRM & Business Partner Sub-Masters
-- **`OCPR`**: Contact Persons Master (Names, positions, emails, direct numbers).
-- **`CRD1`**: Business Partner Addresses (Multiple Bill-to and Ship-to addresses).
-- **`OCRG`**: Business Partner Groups (Customer & Vendor classifications).
-- **`OOPR` / `OPR1`**: Sales Opportunities & Sales Pipeline Stage Tracking.
-- **`OCLG`**: CRM Activities Master (Calls, meetings, tasks linked to BP).
-
-### 9. Cost Accounting, Projects & Financial Budgets
-- **`ODIM`**: Cost Dimensions (Departments, Territories, Channels, Programs).
-- **`OPRC`**: Cost Centers / Profit Centers Master.
-- **`OPMG` / `PMG1`**: Project Management Master & Milestone Stages.
-- **`OBGT` / `BGT1`**: Financial Budget Scenarios & G/L Account Budgets.
-
-### 10. Landed Costs & Customs
-- **`OALC`**: Landed Cost Allocation Master (Customs duty, ocean freight, port wharfage, air cargo surcharge, interstate cartage).
-- **`OIPF` / `IPF1` / `IPF2`**: Landed Cost Document Header, Items Allocation & Fee Breakdown (explicitly linked to Goods Receipt POs `OPDN`/`PDN1` via `BaseType=20`, `BaseEntry`, `BaseLine`, supporting both Estimated `DocType='E'` and Actual `DocType='A'` landed costs).
-
-### 11. Financial Journal Entries & Reconciliation
-- **`OJDT` / `JDT1`**: Financial Journal Entries (Balanced Debit/Credit Lines).
-- **`OITR` / `ITR1`**: Internal Reconciliation (G/L and BP transaction settlements).
-
-### 12. Inventory Transfers, Intercompany Movements & Valuation Audit Log
-- **`OWTQ` / `WTQ1`**: Inventory Transfer Requests across origin, sea-transit, and destination hubs.
-- **`OWTR` / `WTR1`**: Inventory Transfers between Warehouses (e.g. `ICC` -> `SIT` -> `AUWHS`).
-- **`OIGE` / `IGE1`**: Goods Issues (e.g. clearing stock out of transit `SIT`).
-- **`OINM`**: Warehouse Journal & Valuation Audit Trail (Logging GRPO `TransType=20`, Transfers `TransType=67`, Goods Issue `TransType=60`, and Landed Cost Revaluations `TransType=69`).
-- **`ADOC` / `ADT1`**: Field-Level Change Log & System Audit History.
-
-### 🌟 10-Step Intercompany Transfer & Stacked Landed Cost Journey
-The database models the complete multi-warehouse intercompany supply chain:
-1. **Factory GRPO at `ICC`**: Goods received on GRPO (`OPDN`/`PDN1`) from external factory vendor at FOB cost ($C_{\text{FOB}}$).
-2. **Estimated Origin Landed Cost at `ICC`**: `OIPF` (`DocType='E'`) adds origin terminal handling, export brokerage, and factory cartage (+$24/unit).
-3. **Inventory Valuation at `ICC`**: `OITW.AvgPrice('ICC')` = $C_{\text{FOB}} + \$24.00$.
-4. **Transfer `ICC` → `SIT`**: `OWTR`/`WTR1` transfers stock into Sea In-Transit at $C_{\text{ICC}}$ (`OITW.AvgPrice('SIT')` = $C_{\text{ICC}}$).
-5. **Transfer Request `SIT` → `AUWHS`**: `OWTQ`/`WTQ1` initiates port arrival transfer.
-6. **Intercompany GRPO at `AUWHS`**: Goods received into Australian DC at `SIT` transferred cost.
-7. **Goods Issue at `SIT`**: `OIGE`/`IGE1` issues goods out of `SIT` at `SIT` cost.
-8. **Estimated Destination Landed Cost at `AUWHS`**: `OIPF` (`DocType='E'`) calculates estimated ocean freight, estimated import tariff, and port wharfage (+$80/unit → temporary cost $C_{\text{SIT}} + \$80.00$).
-9. **Actual Landed Cost Posted at `AUWHS`**: `OIPF` (`DocType='A'`) reconciles actual carrier bunker adjustments and final customs invoices (+$98/unit), overwriting estimated cost to establish final $\text{AUWHS Cost} = C_{\text{SIT}} + \$98.00$.
-10. **Stacked Landed Cost Distribution**: `OITW.AvgPrice` across every warehouse retains its distinct accumulated value along the journey.
+### 12 Core Business Modules Covered:
+1. **Master Data & Chart of Accounts**: `OACT`, `OWHS`, `OCRD`, `CRD1`, `OITM`, `OITW`
+2. **Banking & Payments**: `OCTG`, `ODSC`, `ORCT`/`RCT2`, `OVPM`/`VPM2`
+3. **Production & Manufacturing**: `OITT`/`ITT1`, `OWOR`/`WOR1`, `OIGN`/`IGN1`, `OIGE`/`IGE1`
+4. **Pricing, Tax & Special Conditions**: `OPLN`, `ITM1`, `OSPP`/`SPP1`, `OSTC`
+5. **Advanced Inventory**: `OBTN`, `OSRN`, `OITL`/`ITL1`, `OBIN`, `OINC`/`INC1`
+6. **Purchasing & AP**: `OPRQ`/`PRQ1`, `OPQT`/`PQT1`, `OPOR`/`POR1`, `OPDN`/`PDN1`, `OPCH`/`PCH1`, `ORPC`/`RPC1`
+7. **Sales & AR (Zero-ODLN)**: `OQUT`/`QUT1`, `ORDR`/`RDR1`, `ODLN`/`DLN1`, `OINV`/`INV1`, `ORDN`/`RDN1`, `ORIN`/`RIN1`
+8. **CRM & Opportunities**: `OCPR`, `OCRG`, `OOPR`/`OPR1`, `OCLG`
+9. **Cost Accounting & Budgets**: `ODIM`, `OPRC`, `OPMG`/`PMG1`, `OBGT`/`BGT1`
+10. **Landed Costs**: `OALC`, `OIPF`/`IPF1`/`IPF2` (Provisional `'E'` and Actual `'A'`)
+11. **Financial Ledgers**: `OJDT`/`JDT1`, `OITR`/`ITR1`
+12. **Inventory Transfers & Audit Log**: `OWTQ`/`WTQ1`, `OWTR`/`WTR1`, `OINM`, `ADOC`/`ADT1`
 
 ---
 
 ## 🚀 Quick Start Guide
 
-### 1. Launch Interactive Web App UI Simulator (Recommended)
-To run the full SAP Fiori / Horizon Web Application UI Simulator:
+### 1. Launch Interactive Web App UI Simulator
 ```bash
 python3 app.py
 ```
-Open your browser at **`http://localhost:5050`** to access:
-- 📊 **Executive Cockpit**: Real-time KPI tiles for Revenue, Stock Valuation, AR/AP balances, and Open Order Backlog.
+Open browser at **`http://localhost:5050`** to access:
+- 📊 **Executive Cockpit**: KPI tiles for Revenue, Stock Valuation, AR/AP, and Backlog.
 - 🏷️ **SAP Golden Arrows (➡️)**: Drill-down modals into Customer 360°, Item 360°, and Document Lines.
 - 🕸️ **Document Relationship Map**: Interactive lifecycle flow from Quotations to Settlements.
 - 📑 **Document Explorer**: Form viewer for Sales Orders, POs, Invoices, Deliveries, and Work Orders.
-- 🛠️ **Live SQL Studio**: Query runner with schema browser across all 82 tables and 12 built-in analytical presets.
+- 🛠️ **Live SQL Studio**: Query runner with schema browser across all 82 tables.
 
 ### 2. Re-seed or Reset Databases
-- To regenerate **`new_b1.db`** (Multi-Warehouse Costing):
-  ```bash
-  python3 init_new_b1.py
-  ```
-- To regenerate **`old_b1.db`** (Single-Level Company Valuation):
-  ```bash
-  python3 init_old_b1.py
-  ```
-- To compare valuations between **`new_b1.db`** and **`old_b1.db`**:
-  ```bash
-  python3 compare_b1_dbs.py
-  ```
-
-### 3. Run Showcase Queries (CLI)
-To execute 12 multi-module analytical queries in terminal:
 ```bash
-python3 query_sap_b1.py           # Queries new_b1.db by default
-python3 query_sap_b1.py old_b1.db # Queries old_b1.db
+python3 init_new_b1.py   # Multi-Warehouse Costing
+python3 init_old_b1.py   # Company-Level Valuation
+python3 compare_b1_dbs.py # Validate differences
 ```
 
-### 4. Interactive SQL Console (CLI)
-To query tables interactively in terminal:
+### 3. Re-compile Process Matrix Documents
 ```bash
-python3 run_sql.py                # Connects to new_b1.db
-python3 run_sql.py old_b1.db      # Connects to old_b1.db
-```
-*(Type any SQL statement like `SELECT * FROM OITT LIMIT 5;` at the `SQL> ` prompt)*
-
----
-
-## 💡 Example Practice Queries
-
-### 1. Order-to-Cash Settlement Reconciliation
-```sql
-SELECT 
-    T0.DocNum AS Payment_Num,
-    T0.DocDate,
-    T0.CardName AS Customer,
-    T2.DocNum AS Invoice_Num,
-    T1.SumApplied AS Amount_Settled,
-    T0.DocTotal AS Payment_Total
-FROM ORCT T0
-INNER JOIN RCT2 T1 ON T0.DocEntry = T1.DocEntry
-LEFT JOIN OINV T2 ON T1.InvoiceId = T2.DocEntry
-ORDER BY T0.DocNum LIMIT 5;
-```
-
-### 2. Bill of Materials (BOM) Explosion with Costing
-```sql
-SELECT 
-    T0.Code AS Parent_Item,
-    T1.ItemName AS Parent_Description,
-    T2.Code AS Child_Component,
-    T3.ItemName AS Component_Description,
-    T2.Quantity,
-    T2.Price AS Component_Unit_Cost,
-    (T2.Quantity * T2.Price) AS Total_Cost
-FROM OITT T0
-INNER JOIN OITM T1 ON T0.Code = T1.ItemCode
-INNER JOIN ITT1 T2 ON T0.Code = T2.Father
-INNER JOIN OITM T3 ON T2.Code = T3.ItemCode
-ORDER BY T0.Code, T2.ChildNum LIMIT 5;
-```
-
-### 3. Batch Inventory Expiration Audit
-```sql
-SELECT 
-    T0.DistNumber AS Batch_Number,
-    T0.ItemCode,
-    T1.ItemName,
-    T0.WhsCode,
-    T0.Quantity AS Batch_Stock,
-    T0.InDate,
-    T0.ExpDate
-FROM OBTN T0
-INNER JOIN OITM T1 ON T0.ItemCode = T1.ItemCode
-ORDER BY T0.ExpDate ASC LIMIT 5;
+python3 generate_process_doc.py     # Compiles SAP_B1_Process_Design_Matrix.docx
+python3 generate_process_sheets.py  # Compiles SAP_B1_Process_Design_Matrix.xlsx
 ```

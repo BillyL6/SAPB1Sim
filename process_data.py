@@ -147,8 +147,12 @@ INDEX_DATA = [
     ("2.4 [SNG-EXCEPTION]", "2.4.2", "PO Changes from AU Warehouse to ICC", "old_b1 → new_b1", "FDMSYD", "ICCSIT", "ICCNGB → AU", "Cancels old_b1 PO; establishes multi-leg ICC PO in new_b1.db", "OPOR (Cancel), OPOR (New), OPDN, OIPF, OWTQ, OWTR"),
     ("2.4 [SNG-EXCEPTION]", "2.4.3", "Intercompany Transfer Quantity Over/Under-Supply", "new_b1 + old_b1", "ICCSIT", "Wharf / Port", "FDMSYD / NZNTH", "Resolves variance: partial GRPO, transit loss write-off, or surplus receipt", "OPDN, OIGE (Write-Off), OIGN, OINV/OPCH Adj"),
     
-    ("2.5 [SNG-RECON]", "2.5.1", "Inventory Valuation Reconciliation", "new_b1 + old_b1", "All Hubs", "In-Transit", "Balance Sheet", "Monthly audit: Warehouse subledger (OITW) vs G/L Control (100010/100050)", "OITW, OINM, OJDT, JDT1, Trial Balance"),
-    ("2.5 [SNG-RECON]", "2.5.2", "Landed Cost Entries Reconciliation", "new_b1 + old_b1", "All Hubs", "Accrual Clearing", "G/L 200050", "Reconciles Estimated (OIPF 'E') vs Actual (OIPF 'A') broker invoices to $0", "OIPF, IPF1, IPF2, OPCH, OJDT (200050)")
+    ("2.5 [SNG-RECONCILIATION]", "2.5.1", "Inventory Valuation Reconciliation", "new_b1 + old_b1", "All Hubs", "In-Transit", "Balance Sheet", "Monthly audit: Warehouse subledger (OITW) vs G/L Control (100010/100050)", "OITW, OINM, OJDT, JDT1, Trial Balance"),
+    ("2.5 [SNG-RECONCILIATION]", "2.5.2", "Landed Cost Entries Reconciliation", "new_b1 + old_b1", "All Hubs", "Accrual Clearing", "G/L 200050", "Reconciles Estimated (OIPF 'E') vs Actual (OIPF 'A') broker invoices to $0", "OIPF, IPF1, IPF2, OPCH, OJDT (200050)"),
+    ("2.5 [SNG-RECONCILIATION]", "2.5.3", "Group Report Reconciliation", "new_b1 + old_b1", "All Hubs", "Consolidated Ledgers", "Group Financial Statements", "Intercompany elimination, group inventory valuation consolidation, and multi-entity profit reporting", "OJDT, JDT1, OACT, Group Balance Sheet"),
+    
+    ("2.6 [MD-MAINTENANCE]", "2.6.1", "SAP B1 Inventory Item Master Maintenance", "new_b1 + old_b1", "Master Setup", "Warehouse Bins", "Item Master Records", "Item Code creation, valuation method setup (OITM vs OITW), purchasing/sales UoM, and barcode cataloging", "OITM, OITW, ITM1, OPLN, OWHS, OBIN"),
+    ("2.6 [MD-MAINTENANCE]", "2.6.2", "SAP B1 Business Partner Master Maintenance", "new_b1 + old_b1", "Master Setup", "Commercial Ledger", "BP Master Records", "Vendor/Customer setup (OCRD/CRD1), currency assignment (USD/AUD/NZD/GBP), payment terms (OCTG), and tax group mapping", "OCRD, CRD1, OCPR, OCRG, OCTG, OSTC")
 ]
 
 ALL_SECTIONS = [
