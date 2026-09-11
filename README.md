@@ -157,3 +157,170 @@ python3 compare_b1_dbs.py # Validate differences
 python3 generate_process_doc.py     # Compiles SAP_B1_Process_Design_Matrix.docx
 python3 generate_process_sheets.py  # Compiles SAP_B1_Process_Design_Matrix.xlsx
 ```
+
+---
+
+## 🔒 Decision-Support Info Pack: Irreversible SAP Business One Database Configurations
+
+When provisioning a fresh SAP Business One database, certain system settings become **permanently irreversible** upon database creation or as soon as the first financial transaction (`OJDT`), inventory movement (`OINM`), or master data record is posted. Making an incorrect decision during initialization often requires an entire database rebuild and full data migration.
+
+The following decision-support matrix and detailed technical briefs outline the architectural impact, business implications, and recommendations for each irreversible setting.
+
+---
+
+### 1. Executive Summary & Configuration Decision Matrix
+
+| Configuration Setting | Navigation Path | Irreversibility Level | Recommended Setting | Primary Decision Rationale |
+| :--- | :--- | :---: | :---: | :--- |
+| **Chart of Account Template** | `Company Details > Basic Init` | **Strict (At Creation)** | **User-Defined** (or Local Standard) | Standardizes financial structure across entities; cannot change template after accounts are generated. |
+| **Local Currency (LC)** | `Company Details > Basic Init` | **100% Absolute Lock** | **Entity Legal Currency** (`AUD`, `NZD`, `GBP`) | Must strictly match the statutory tax filing and statutory reporting currency of the legal entity. |
+| **System Currency (SC)** | `Company Details > Basic Init` | **100% Absolute Lock** | **Consolidation Currency** (`USD` or `AUD`) | Enables parallel real-time dual-currency reporting and global corporate group financial consolidation. |
+| **Credit Balance with Negative Sign** | `Company Details > Basic Init` | **High (Reporting Impact)** | **Checked (`Yes`)** | Mathematical standard for G/L reporting; ensures credit balances appear with negative `-` signs in trial balance. |
+| **Use Segmentation Accounts** | `Company Details > Basic Init` | **100% Irreversible** | **UNCHECKED (`No`)** | Avoids massive G/L code combinatorial explosion; **Cost Accounting Multidimensions (`ODIM`)** is far superior. |
+| **Permit >1 Doc Type per Series** | `Company Details > Basic Init` | **Irreversible once used** | **UNCHECKED (`No`)** | Preserves separate, audit-compliant, unbroken sequential numbering series per document type (`OINV`, `ORDR`, `OPDN`). |
+| **Use Continuous Stock (Perpetual)** | `Company Details > Basic Init` | **100% Absolute Lock** | **CHECKED (`Yes`)** | **Mandatory** for real-time balance sheet inventory valuation, landed cost allocation (`OIPF`), and live COGS postings. |
+| **Manage Cost per Warehouse** | `Company Details > Basic Init` | **100% Irreversible** | **CHECKED (`Yes` / StockByWhs='Y')** | **Mandatory** for multi-warehouse and intercompany supply chains to track localized landed costs per hub (`OITW.AvgPrice`). |
+| **Purchase Accounts Posting System** | `Company Details > Basic Init` | **100% Irreversible** | **UNCHECKED (`No`)** | Required only for continental Europe legal accounting; standard Anglo-Saxon/AU/UK accounting uses GRPO clearing. |
+| **Enable Fixed Assets** | `Company Details > Basic Init` | **Permanent Schema Embed** | **CHECKED (`Yes`)** | Embeds native fixed asset register, depreciation schedules (`ODPV`), and capitalization workflows inside SAP B1. |
+| **Mask Credit Card Number** | `Company Details > Basic Init` | **Compliance Requirement** | **CHECKED (`Yes`)** | PCI-DSS data security compliance; permanently prevents raw credit card storage in clear text. |
+| **Enable Multiple Branches** | `Company Details > Basic Init` | **100% Irreversible** | **Evaluate Entity Structure** | Unlocks multiple tax registrations / ABNs in a single DB; forces all documents to require a Branch ID (`BPLId`). |
+| **Enable Approval Process** | `General Settings > BP` | **Audit Trailing Lock** | **CHECKED (`Yes`)** | Enables corporate governance, spend approval tiers, and credit limit exception workflows (`OWST`, `OWDD`). |
+| **Exchange Rate Posting** | `General Settings > Display` | **Calculation Engine Lock** | **Direct (`1 FC = X LC`)** | Adopts regional standard quotation convention matching domestic central bank exchange rates. |
+| **Decimal Places** | `General Settings > Display` | **Increase Only (No Decrease)** | **Price: 4, Qty: 2-3, Rate: 4-6, Amt: 2** | **Extreme Caution**: Decimal precision can never be decreased once saved. |
+| **Use Multidimensions** | `General Settings > Cost Accounting` | **100% Irreversible** | **CHECKED (`Yes`)** | Enables up to 5 concurrent reporting dimensions (Cost Center, Sales Channel, Region, Project) without G/L bloat. |
+| **Posting Periods Setup** | `System Init > Posting Period` | **Permanent First Period** | **12 Monthly Sub-Periods** | First fiscal year start and monthly sub-period structure cannot be modified after initial posting. |
+| **Manage Freight in Documents** | `Document Settings > General` | **Permanent Doc Structure** | **CHECKED (`Yes`)** | Required for allocating freight revenue, transport charges, and courier surcharges (`OEXD`) on commercial documents. |
+| **Master Data Deletion Immutability** | `Item & BP Master Data` | **Permanent Audit Retention** | **Enforce Strict Staging** | Records with transaction history (`OINM`/`OJDT`) cannot be deleted; must use "Inactive / Freeze" flags instead. |
+
+---
+
+### 2. Deep-Dive Technical Decision Support & Guidance
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                      SAP BUSINESS ONE INITIALIZATION ARCHITECTURE & DECISION PATH                      │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 1. Legal Entity & Currency Foundation:  [Local Currency] ───► [System Currency] ───► [Branch Strategy] │
+│ 2. Financial & Accounting Framework:    [COA Structure]  ───► [Dimensions ODIM] ───► [Posting Periods] │
+│ 3. Inventory Valuation & Landed Cost:   [Perpetual Stock]───► [Manage by Whs]  ───► [Freight in Docs] │
+│ 4. System Ergonomics & Precision:       [Decimals Lock]  ───► [Approval W/F]   ───► [Fixed Assets]     │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### A. Company Details & Basic Initialization
+
+##### 1. Chart of Account Template
+* **Technical Impact**: Dictates the primary structure of table `OACT` (Levels 1 to 5: Drawers, Title Accounts, and Active Postable Accounts).
+* **Options**: Standard Predefined Localization (e.g. Australia Standard) vs. **User-Defined**.
+* **Decision Guide**:
+  * Select **User-Defined** if your enterprise operates a standardized corporate Chart of Accounts or consolidates reporting across multiple regional subsidiaries (AU, NZ, UK, Asia).
+  * Select **Standard Localization** if you require out-of-the-box statutory tax reporting tailored to a single jurisdiction.
+* **Warning**: You cannot swap or re-apply a different template once accounts are generated and transaction postings exist.
+
+##### 2. Local Currency (LC) vs. System Currency (SC)
+* **Local Currency (`LC`)**: The functional legal operating currency of the database (e.g. `AUD` for Australia, `NZD` for New Zealand, `GBP` for UK). All statutory tax returns (GST/BAS/VAT) are strictly generated in LC. **Cannot be altered once set.**
+* **System Currency (`SC`)**: A parallel secondary currency in which SAP Business One calculates and stores every single journal line (`JDT1.SysCred`, `JDT1.SysDeb`).
+* **Decision Guide**:
+  * If corporate HQ reports in `USD`, configure **Local Currency = `AUD`** and **System Currency = `USD`**.
+  * This provides automated, real-time balance sheet and P&L reporting in both currencies simultaneously without manual exchange rate conversion.
+
+##### 3. Display Credit Balance with Negative Sign
+* **Technical Impact**: Configures whether G/L credit balances (Liabilities, Equity, Revenue) are formatted with a negative `-` sign or positive values in trial balances and queries.
+* **Decision Guide**: Enable (`Yes`). Modern financial practice and automated reporting pipelines rely on mathematical sign conventions (Debits = Positive, Credits = Negative) for net-sum reconciliation.
+
+##### 4. Use Segmentation Accounts vs. Cost Accounting Dimensions
+* **Technical Impact**: Splits G/L codes into rigid segments (e.g. `100010-01-002-05` = `Natural-Division-Department-Region`).
+* **Decision Guide**: **DO NOT ENABLE Segmentation.**
+  * *Why?* Account segmentation causes a combinatorial explosion of the Chart of Accounts (thousands of redundant G/L accounts).
+  * *Superior Alternative*: Use **Cost Accounting Multidimensions (`ODIM` / `OPRC`)**. Multidimensions allow dynamic, matrix-based slice-and-dice reporting across 5 independent axes without adding a single extra G/L account.
+
+##### 5. Permit More Than One Document Type per Series
+* **Technical Impact**: Allows different document objects (e.g. Sales Invoices `OINV` and Delivery Notes `ODLN`) to share a unified sequential numbering sequence.
+* **Decision Guide**: **Keep UNCHECKED (`No`).** Statutory audit standards in Australia, New Zealand, and the UK require discrete, unbroken, auditable numbering series per document category.
+
+##### 6. Use Continuous Stock (Perpetual Inventory)
+* **Technical Impact**: Controls whether inventory movements write real-time balancing double-entry transactions to the General Ledger (`OJDT`).
+* **Decision Guide**: **MUST BE ENABLED (`Yes`).**
+  * Essential for automated Landed Cost capitalization (`OIPF`), live COGS recognition upon Direct AR Invoicing (`OINV`), and real-time Balance Sheet stock asset valuation (`G/L 100010` / `100050`).
+  * If left unchecked, the company is placed on periodic inventory, requiring manual month-end stock count adjustments. **This setting can NEVER be enabled later once non-perpetual transactions exist.**
+
+##### 7. Manage Item Cost per Warehouse (`StockByWhs`)
+* **Technical Impact**:
+  * **`StockByWhs = 'Y'`**: Moving average cost / FIFO is calculated independently per warehouse (`OITW.AvgPrice`).
+  * **`StockByWhs = 'N'`**: A single blended average cost is applied company-wide (`OITM.AvgPrice`); `OITW.AvgPrice` is forced to `0.0`.
+* **Decision Guide**: **MUST BE ENABLED (`Yes`).**
+  * Crucial for supply chain architectures featuring multiple regional hubs (e.g. Origin `ICCChina` at $424 AUD vs. Inbound DC `AU Warehouse` at $522 AUD vs. European DC `EuropeMarketPlace` at $560 AUD).
+  * Prevents cross-warehouse inventory valuation distortion.
+
+##### 8. Use Purchase Accounts Posting System
+* **Technical Impact**: Routes vendor invoices through separate Purchase (`5xxxx`) and Purchase Return accounts.
+* **Decision Guide**: **Keep UNCHECKED (`No`)** unless operating in specific continental European jurisdictions (e.g. France, Italy, Belgium, Spain). Anglo-Saxon accounting (AU, NZ, UK, US) utilizes standard GRPO Allocation / Landed Cost Clearing (`G/L 200030` / `200050`).
+
+##### 9. Enable Fixed Assets
+* **Technical Impact**: Activates the native Fixed Asset subledger (`OAAQ`, `OAFM`, `ODPV`), asset classes, depreciation areas, and fiscal depreciation run engines.
+* **Decision Guide**: Enable (`Yes`) if managing capital assets, warehouse automation machinery, IT hardware, or facility improvements within SAP B1.
+
+---
+
+#### B. Multi-Branch Architecture (`Enable Multiple Branches`)
+
+* **Technical Impact**: Alters the entire database schema to enforce a Branch ID (`BPLId`) foreign key across all documents (`ORDR`, `OPOR`, `OINV`), journal entries (`OJDT`), warehouse master records (`OWHS.BPLid`), and user authorizations.
+* **Architectural Evaluation**:
+  * **Single DB with Multi-Branch**:
+    * *Pros*: Single login; unified Business Partner and Item Master data; consolidated reporting; simplified inter-branch transfers.
+    * *Cons*: Shared Chart of Accounts structure; shared base currency; increased complexity in user data separation and branch clearing.
+  * **Multiple Discrete Databases (e.g. `new_b1.db` vs `old_b1.db`)**:
+    * *Pros*: 100% legal, currency, and fiscal separation; tailored Chart of Accounts and localized tax engines per country.
+    * *Cons*: Requires master data synchronization across databases; intercompany trade executed via export/import or integration middleware.
+* **Decision Guide**: Enable Multi-Branch if all operational entities share the same primary operating currency and accounting standards under one legal parent. If operating across distinct legal entities with different functional currencies (e.g. AU vs UK vs NZ), deploy separate localized databases with intercompany integration.
+
+---
+
+#### C. Display Settings & Decimal Precision Governance
+
+* **Decimal Places Rule**: **DECIMALS CAN BE INCREASED AT ANY TIME, BUT CAN NEVER BE DECREASED.**
+* **Recommended Enterprise Standard**:
+  * **Prices**: Set to **`4` Decimals** (e.g. `$12.3450`). Critical for high-volume consumables, electronic components, freight rate brackets, and currency conversions where rounding at 2 decimals causes massive aggregate errors.
+  * **Amounts**: Set to **`2` Decimals** (e.g. `$1,250.50`). Standard currency denomination.
+  * **Quantities**: Set to **`2` or `3` Decimals** (e.g. `10.500 kg` or `1.00 EA`). Accommodates fractional UoM, weight, volume, or length measurements.
+  * **Percentages**: Set to **`2` to `4` Decimals** (e.g. `10.00%` GST, `3.7525%` landed cost factor).
+  * **Exchange Rates**: Set to **`4` or `6` Decimals** (e.g. `1 USD = 1.543210 AUD`). Mandatory for minimizing foreign exchange rounding variances.
+
+---
+
+#### D. Cost Accounting & Analytical Multidimensions
+
+* **Technical Impact**: Unlocks table `ODIM` and provides up to 5 concurrent dimensions on every line of every transaction (`PRC1` through `PRC5`).
+* **Recommended Dimension Framework**:
+  * **Dimension 1 (`Cost Center`)**: Departmental OpEx (e.g. Logistics, Warehousing, Executive, Sales, IT).
+  * **Dimension 2 (`Sales Channel`)**: Revenue Channels (e.g. Direct Consumer D2C, Wholesale B2B, Marketplace `EuropeMarketPlace`).
+  * **Dimension 3 (`Geographic Region`)**: Physical distribution territory (e.g. Australia East, Australia West, New Zealand, Europe).
+  * **Dimension 4 (`Product Category`)**: Business unit / product division (e.g. Robotics, AI Vision, Industrial Hardware).
+  * **Dimension 5 (`Project / Initiative`)**: Capital expenditure, warehouse expansion, or strategic client projects.
+* **Decision Guide**: **MUST BE ENABLED (`Yes`).** Delivers granular P&L reporting without restructuring the Chart of Accounts.
+
+---
+
+#### E. Posting Periods Setup & Fiscal Governance
+
+* **Technical Impact**: Establishes the fundamental calendar against which all transactional date validations (`DocDate`, `TaxDate`, `DueDate`) operate.
+* **Decision Guide**:
+  * Define the correct **Financial Year Start Date** (e.g. `01/07/2026` for Australian fiscal year July–June, or `01/01/2026` for calendar year).
+  * Select **Sub-Periods = Months** (producing 12 distinct postable period buckets `2026-01` through `2026-12`).
+  * Never initialize a production database with `Sub-Periods = Year`, as financial period locking and month-end close controls cannot be retrofitted to past periods.
+
+---
+
+#### F. Master Data Lifecycle & Immutability Governance
+
+* **Transaction Lock Rule**: Once a single document, opening balance, or journal entry is linked to an Item Code (`OITM`) or Business Partner (`OCRD`):
+  * The record **CANNOT BE DELETED** from the database (maintains relational audit integrity for table `OINM`, `JDT1`).
+  * The Item Valuation System (`OITM.EvalSystem` / `OITW.EvalSystem` Moving Average vs. FIFO vs. Standard) **CANNOT BE MODIFIED** if stock on hand exists.
+  * Business Partner Category (`CardType` `'C'` Customer vs. `'S'` Vendor) is permanently frozen.
+* **Pre-Go-Live Governance Checklist**:
+  1. Audit and sanitize all legacy item catalogs before executing initial data migration.
+  2. Enforce standardized coding conventions (`ITM-[GRP]-[SEQ]`, `V-[VENDOR]`, `C-[CUSTOMER]`).
+  3. Validate Valuation Method (`Moving Average` vs `FIFO`) per item group prior to opening stock balance entry.
+  4. For decommissioned products or inactive suppliers post-Go-Live, flag records as **`Inactive = 'Y'`** / **`Freeze`** rather than attempting deletion.
+
+---
